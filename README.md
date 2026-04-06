@@ -11,6 +11,7 @@ This is a full cheat client mod with vision, movement, awareness, camera, invent
 - `Fullbright` using the same render path as night vision
 - `X-Ray` with `ESP`, `Spectator View`, and `Ore Mode`
 - `NoRender` for fog, overlays, bobbing, and damage tilt removal
+- `Player ESP` with tracers and player boxes
 
 ### Movement
 
@@ -21,6 +22,8 @@ This is a full cheat client mod with vision, movement, awareness, camera, invent
 - `SafeWalk`
 - `NoSlow`
 - `NoPush`
+- `NoWeb`
+- `AutoTool`
 
 ### Awareness
 
@@ -36,6 +39,7 @@ This is a full cheat client mod with vision, movement, awareness, camera, invent
 - Live target hand copy
 - `Anchor Pulse`
 - `HallowInv`
+- `Chest Stealer`
 
 ### Protection
 
@@ -65,6 +69,10 @@ Hold `F6` and press:
 - `[`: `SafeWalk`
 - `]`: `NoSlow`
 - `\`: `NoPush`
+- `P`: `Player ESP`
+- `T`: `AutoTool`
+- `C`: `Chest Stealer`
+- `W`: `NoWeb`
 
 ### Other Shortcuts
 
@@ -100,6 +108,7 @@ That includes enabled module state, saved camera points, minimap visibility, and
 ## Notes
 
 - Most features are client-side cheats. Some inventory and protection behavior has better sync in singleplayer or on Hallow-enabled servers.
+- Holding `F6` captures keyboard and mouse input so the shortcut layer can use arbitrary keys without triggering normal controls.
 - `HallowInv` supports live client inventory editing, with extra sync support where the matching server payload exists.
 - `Projectile Predict` renders a translucent arc with landing marker instead of a simple point trail.
 - Player camera browsing is detached from your movement entity, so you can still move while looking through another player's view.

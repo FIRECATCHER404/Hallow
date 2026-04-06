@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.hallow.client.HallowRuntimeState;
 
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.entity.Entity;
 
 @Mixin(LocalPlayer.class)
 abstract class LocalPlayerMixin {
@@ -28,14 +27,13 @@ abstract class LocalPlayerMixin {
         }
     }
 
-    @Redirect(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;onGround()Z"))
-    private boolean hallow$spoofGroundStateForNoFall(Entity entity) {
-        LocalPlayer player = (LocalPlayer) (Object) this;
-        if (entity == player && HallowRuntimeState.shouldSpoofNoFall(player)) {
+    @Redirect(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;onGround()Z"))
+    private boolean hallow$spoofGroundStateForNoFall(LocalPlayer player) {
+        if (player == (Object) this && HallowRuntimeState.shouldSpoofNoFall(player)) {
             return true;
         }
 
-        return entity.onGround();
+        return player.onGround();
     }
 
     @Inject(method = "aiStep", at = @At("TAIL"))

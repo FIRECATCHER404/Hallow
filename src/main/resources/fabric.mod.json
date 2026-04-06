@@ -3,7 +3,7 @@
   "id": "hallow",
   "version": "${version}",
   "name": "Hallow",
-  "description": "Hallow client mod with optional server-authoritative HallowInv support.",
+  "description": "Client-side Fabric cheat mod with movement, vision, ESP, camera, inventory, and protection modules.",
   "icon": "assets/hallow/icon.png",
   "authors": [
     "Firecatcher303"
