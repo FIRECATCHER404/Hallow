@@ -52,7 +52,7 @@ public final class HallowCameraController {
         }
 
         long window = client.getWindow().handle();
-        boolean allowDirectKeys = client.screen == null;
+        boolean allowDirectKeys = client.screen == null && !HallowInputCapture.isChordCaptureActive(client);
         updatePlayerSnapshots(client);
 
         boolean saveDown = allowDirectKeys && GLFW.glfwGetKey(window, SAVE_KEY) == GLFW.GLFW_PRESS;

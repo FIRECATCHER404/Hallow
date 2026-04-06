@@ -79,9 +79,7 @@ public final class AnchorPulseModule extends CheatModule {
 
     @Override
     public String legendLine(Minecraft client) {
-        return slot() == 10
-            ? "0  Anchor Pulse " + (anchor == null ? "[SET]" : "[CLEAR]")
-            : super.legendLine(client);
+        return slotKeyLabel() + "  Anchor Pulse " + (anchor == null ? "[SET]" : "[CLEAR]");
     }
 
     @Override

@@ -24,6 +24,6 @@ public final class ProjectilePredictModule extends CheatModule {
 
     @Override
     public String legendLine(Minecraft client) {
-        return "-  Projectile Predict" + (isEnabled() ? " [ON]" : " [OFF]");
+        return slotKeyLabel() + "  Projectile Predict" + (isEnabled() ? " [ON]" : " [OFF]");
     }
 }

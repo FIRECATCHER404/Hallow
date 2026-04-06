@@ -2,7 +2,7 @@
 
 `Hallow` is a client-side Fabric cheat mod for Minecraft `1.21.11`.
 
-This is not a server-testing scaffold anymore. It is a full cheat client mod with vision, movement, awareness, camera, inventory, and protection features, plus a small HUD-driven control layer built around quick in-game toggles.
+This is a full cheat client mod with vision, movement, awareness, camera, inventory, and protection features, plus a small HUD-driven control layer built around quick in-game toggles.
 
 ## Current Feature Set
 

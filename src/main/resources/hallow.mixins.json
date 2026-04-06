@@ -11,6 +11,7 @@
     "FogRendererMixin",
     "GameRendererMixin",
     "GuiMixin",
+    "KeyMappingMixin",
     "LevelRendererMixin",
     "LightTextureMixin",
     "LocalPlayerMixin",

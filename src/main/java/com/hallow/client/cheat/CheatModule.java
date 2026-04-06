@@ -1,11 +1,13 @@
 package com.hallow.client.cheat;
 
 import java.util.List;
+import java.util.Locale;
 
 import com.hallow.client.config.HallowStorage;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
 public abstract class CheatModule {
     private final String name;
@@ -96,13 +98,52 @@ public abstract class CheatModule {
 
     protected final String slotKeyLabel() {
         return switch (slot) {
-            case 10 -> "0";
-            case 11 -> "-";
-            case 12 -> "=";
-            case 13 -> "[";
-            case 14 -> "]";
-            case 15 -> "\\";
-            default -> Integer.toString(slot);
+            case GLFW.GLFW_KEY_0 -> "0";
+            case GLFW.GLFW_KEY_1 -> "1";
+            case GLFW.GLFW_KEY_2 -> "2";
+            case GLFW.GLFW_KEY_3 -> "3";
+            case GLFW.GLFW_KEY_4 -> "4";
+            case GLFW.GLFW_KEY_5 -> "5";
+            case GLFW.GLFW_KEY_6 -> "6";
+            case GLFW.GLFW_KEY_7 -> "7";
+            case GLFW.GLFW_KEY_8 -> "8";
+            case GLFW.GLFW_KEY_9 -> "9";
+            case GLFW.GLFW_KEY_A -> "A";
+            case GLFW.GLFW_KEY_B -> "B";
+            case GLFW.GLFW_KEY_C -> "C";
+            case GLFW.GLFW_KEY_D -> "D";
+            case GLFW.GLFW_KEY_E -> "E";
+            case GLFW.GLFW_KEY_F -> "F";
+            case GLFW.GLFW_KEY_G -> "G";
+            case GLFW.GLFW_KEY_H -> "H";
+            case GLFW.GLFW_KEY_I -> "I";
+            case GLFW.GLFW_KEY_J -> "J";
+            case GLFW.GLFW_KEY_K -> "K";
+            case GLFW.GLFW_KEY_L -> "L";
+            case GLFW.GLFW_KEY_M -> "M";
+            case GLFW.GLFW_KEY_N -> "N";
+            case GLFW.GLFW_KEY_O -> "O";
+            case GLFW.GLFW_KEY_P -> "P";
+            case GLFW.GLFW_KEY_Q -> "Q";
+            case GLFW.GLFW_KEY_R -> "R";
+            case GLFW.GLFW_KEY_S -> "S";
+            case GLFW.GLFW_KEY_T -> "T";
+            case GLFW.GLFW_KEY_U -> "U";
+            case GLFW.GLFW_KEY_V -> "V";
+            case GLFW.GLFW_KEY_W -> "W";
+            case GLFW.GLFW_KEY_X -> "X";
+            case GLFW.GLFW_KEY_Y -> "Y";
+            case GLFW.GLFW_KEY_Z -> "Z";
+            case GLFW.GLFW_KEY_MINUS -> "-";
+            case GLFW.GLFW_KEY_EQUAL -> "=";
+            case GLFW.GLFW_KEY_LEFT_BRACKET -> "[";
+            case GLFW.GLFW_KEY_RIGHT_BRACKET -> "]";
+            case GLFW.GLFW_KEY_BACKSLASH -> "\\";
+            case GLFW.GLFW_KEY_COMMA -> ",";
+            default -> {
+                String keyName = GLFW.glfwGetKeyName(slot, 0);
+                yield keyName == null ? Integer.toString(slot) : keyName.toUpperCase(Locale.ROOT);
+            }
         };
     }
 }

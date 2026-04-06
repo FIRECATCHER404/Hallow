@@ -289,11 +289,15 @@ public final class HallowConfigScreen extends Screen {
             bottom += 24;
             addPageWidget(new DoubleSlider(left, bottom, width, "Swim Vertical Boost", 0.01, 0.15, workingCopy.swimAssist.verticalBoost, value -> workingCopy.swimAssist.verticalBoost = value, value -> format(value, 2)));
             bottom += 24;
+            addPageWidget(toggle(left, bottom, "AutoTool Auto-Enable", workingCopy.autoTool.autoEnable, value -> workingCopy.autoTool.autoEnable = value));
+            bottom += 24;
             addPageWidget(toggle(left, bottom, "SafeWalk Auto-Enable", workingCopy.safeWalk.autoEnable, value -> workingCopy.safeWalk.autoEnable = value));
             bottom += 24;
             addPageWidget(toggle(left, bottom, "NoSlow Auto-Enable", workingCopy.noSlow.autoEnable, value -> workingCopy.noSlow.autoEnable = value));
             bottom += 24;
             addPageWidget(toggle(left, bottom, "NoPush Auto-Enable", workingCopy.noPush.autoEnable, value -> workingCopy.noPush.autoEnable = value));
+            bottom += 24;
+            addPageWidget(toggle(left, bottom, "NoWeb Auto-Enable", workingCopy.noWeb.autoEnable, value -> workingCopy.noWeb.autoEnable = value));
 
             return bottom + 24;
         }
@@ -322,11 +326,15 @@ public final class HallowConfigScreen extends Screen {
         rightBottom += 24;
         addPageWidget(new DoubleSlider(right, rightBottom, columnWidth, "Swim Vertical Boost", 0.01, 0.15, workingCopy.swimAssist.verticalBoost, value -> workingCopy.swimAssist.verticalBoost = value, value -> format(value, 2)));
         rightBottom += 24;
+        addPageWidget(toggle(right, rightBottom, "AutoTool Auto-Enable", workingCopy.autoTool.autoEnable, value -> workingCopy.autoTool.autoEnable = value));
+        rightBottom += 24;
         addPageWidget(toggle(right, rightBottom, "SafeWalk Auto-Enable", workingCopy.safeWalk.autoEnable, value -> workingCopy.safeWalk.autoEnable = value));
         rightBottom += 24;
         addPageWidget(toggle(right, rightBottom, "NoSlow Auto-Enable", workingCopy.noSlow.autoEnable, value -> workingCopy.noSlow.autoEnable = value));
         rightBottom += 24;
         addPageWidget(toggle(right, rightBottom, "NoPush Auto-Enable", workingCopy.noPush.autoEnable, value -> workingCopy.noPush.autoEnable = value));
+        rightBottom += 24;
+        addPageWidget(toggle(right, rightBottom, "NoWeb Auto-Enable", workingCopy.noWeb.autoEnable, value -> workingCopy.noWeb.autoEnable = value));
 
         return Math.max(leftBottom, rightBottom) + 24;
     }
@@ -351,6 +359,8 @@ public final class HallowConfigScreen extends Screen {
             addPageWidget(new DoubleSlider(left, bottom, width, "Blindside Threshold", -0.95, 0.95, workingCopy.threatRadar.blindsideThreshold, value -> workingCopy.threatRadar.blindsideThreshold = value, value -> format(value, 2)));
             bottom += 24;
             addPageWidget(toggle(left, bottom, "Glow Nearby Players Too", workingCopy.threatRadar.highlightPlayers, value -> workingCopy.threatRadar.highlightPlayers = value));
+            bottom += 24;
+            addPageWidget(toggle(left, bottom, "Player ESP Auto-Enable", workingCopy.playerEsp.autoEnable, value -> workingCopy.playerEsp.autoEnable = value));
             bottom += 24;
             addPageWidget(toggle(left, bottom, "Projectile Predict Auto-Enable", workingCopy.projectilePredict.autoEnable, value -> workingCopy.projectilePredict.autoEnable = value));
             bottom += 24;
@@ -383,6 +393,8 @@ public final class HallowConfigScreen extends Screen {
         addPageWidget(new DoubleSlider(right, rightBottom, columnWidth, "Blindside Threshold", -0.95, 0.95, workingCopy.threatRadar.blindsideThreshold, value -> workingCopy.threatRadar.blindsideThreshold = value, value -> format(value, 2)));
         rightBottom += 24;
         addPageWidget(toggle(right, rightBottom, "Glow Nearby Players Too", workingCopy.threatRadar.highlightPlayers, value -> workingCopy.threatRadar.highlightPlayers = value));
+        rightBottom += 24;
+        addPageWidget(toggle(right, rightBottom, "Player ESP Auto-Enable", workingCopy.playerEsp.autoEnable, value -> workingCopy.playerEsp.autoEnable = value));
         int predictLeftY = Math.max(leftBottom, rightBottom) + 10;
         int predictRightY = predictLeftY;
 
@@ -405,6 +417,8 @@ public final class HallowConfigScreen extends Screen {
             addPageWidget(toggle(left, bottom, "HallowInv Auto-Enable", workingCopy.creativeAccess.autoEnable, value -> workingCopy.creativeAccess.autoEnable = value));
             bottom += 24;
             addPageWidget(toggle(left, bottom, "Open HallowInv On Enable", workingCopy.creativeAccess.openOnEnable, value -> workingCopy.creativeAccess.openOnEnable = value));
+            bottom += 24;
+            addPageWidget(toggle(left, bottom, "Chest Stealer Auto-Enable", workingCopy.chestStealer.autoEnable, value -> workingCopy.chestStealer.autoEnable = value));
             bottom += 24;
             addPageWidget(new IntSlider(left, bottom, width, "Saved Camera Limit", 1, 64, workingCopy.camera.maxSavedPoints, value -> workingCopy.camera.maxSavedPoints = value, value -> Integer.toString(value)));
             bottom += 24;
@@ -437,6 +451,8 @@ public final class HallowConfigScreen extends Screen {
         addPageWidget(toggle(left, leftBottom, "HallowInv Auto-Enable", workingCopy.creativeAccess.autoEnable, value -> workingCopy.creativeAccess.autoEnable = value));
         leftBottom += 24;
         addPageWidget(toggle(left, leftBottom, "Open HallowInv On Enable", workingCopy.creativeAccess.openOnEnable, value -> workingCopy.creativeAccess.openOnEnable = value));
+        leftBottom += 24;
+        addPageWidget(toggle(left, leftBottom, "Chest Stealer Auto-Enable", workingCopy.chestStealer.autoEnable, value -> workingCopy.chestStealer.autoEnable = value));
         leftBottom += 24;
         addPageWidget(new IntSlider(left, leftBottom, columnWidth, "Saved Camera Limit", 1, 64, workingCopy.camera.maxSavedPoints, value -> workingCopy.camera.maxSavedPoints = value, value -> Integer.toString(value)));
         leftBottom += 24;
@@ -556,7 +572,7 @@ public final class HallowConfigScreen extends Screen {
             graphics.drawString(this.font, Component.literal(scrollOffset + " / " + maxScroll), panelRight - 42, contentTop() + 6, 0xFF8FA0B8, false);
         }
 
-        graphics.drawCenteredString(this.font, Component.literal("Hold F6 + 1-0, -, =, [, ], \\ for cheats. V opens HallowInv. H/J copy target hands. , toggles Minimap."), this.width / 2, helperTextY() + 14, 0xFF8FA0B8);
+        graphics.drawCenteredString(this.font, Component.literal("Hold F6 to capture input. Shortcuts include 1-0, -, =, [, ], \\, plus P/T/C/W. V opens HallowInv. H/J copy target hands."), this.width / 2, helperTextY() + 14, 0xFF8FA0B8);
 
         super.render(graphics, mouseX, mouseY, partialTick);
     }

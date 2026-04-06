@@ -19,6 +19,7 @@ public final class HallowRuntimeState {
     private static volatile boolean safeWalkEnabled;
     private static volatile boolean noSlowEnabled;
     private static volatile boolean noPushEnabled;
+    private static volatile boolean noWebEnabled;
     private static volatile boolean noRenderEnabled;
 
     private HallowRuntimeState() {
@@ -113,6 +114,14 @@ public final class HallowRuntimeState {
 
     public static boolean isNoPushEnabled() {
         return noPushEnabled;
+    }
+
+    public static void setNoWebEnabled(boolean enabled) {
+        noWebEnabled = enabled;
+    }
+
+    public static boolean isNoWebEnabled() {
+        return noWebEnabled;
     }
 
     public static void setNoRenderEnabled(boolean enabled) {

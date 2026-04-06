@@ -57,6 +57,6 @@ public final class NoRenderModule extends CheatModule {
 
     @Override
     public String legendLine(Minecraft client) {
-        return "=  NoRender" + (isEnabled() ? " [ON]" : " [OFF]");
+        return slotKeyLabel() + "  NoRender" + (isEnabled() ? " [ON]" : " [OFF]");
     }
 }

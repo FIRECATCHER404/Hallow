@@ -41,9 +41,13 @@ public final class HallowConfig {
     public AutoSprintSettings autoSprint = new AutoSprintSettings();
     public StepAssistSettings stepAssist = new StepAssistSettings();
     public SwimAssistSettings swimAssist = new SwimAssistSettings();
+    public PlayerEspSettings playerEsp = new PlayerEspSettings();
+    public AutoToolSettings autoTool = new AutoToolSettings();
+    public ChestStealerSettings chestStealer = new ChestStealerSettings();
     public SafeWalkSettings safeWalk = new SafeWalkSettings();
     public NoSlowSettings noSlow = new NoSlowSettings();
     public NoPushSettings noPush = new NoPushSettings();
+    public NoWebSettings noWeb = new NoWebSettings();
     public CreativeAccessSettings creativeAccess = new CreativeAccessSettings();
     public CameraSettings camera = new CameraSettings();
     public MinimapSettings minimap = new MinimapSettings();
@@ -222,6 +226,18 @@ public final class HallowConfig {
         public double verticalBoost = 0.05;
     }
 
+    public static final class PlayerEspSettings {
+        public boolean autoEnable = false;
+    }
+
+    public static final class AutoToolSettings {
+        public boolean autoEnable = false;
+    }
+
+    public static final class ChestStealerSettings {
+        public boolean autoEnable = false;
+    }
+
     public static final class SafeWalkSettings {
         public boolean autoEnable = false;
     }
@@ -231,6 +247,10 @@ public final class HallowConfig {
     }
 
     public static final class NoPushSettings {
+        public boolean autoEnable = false;
+    }
+
+    public static final class NoWebSettings {
         public boolean autoEnable = false;
     }
 

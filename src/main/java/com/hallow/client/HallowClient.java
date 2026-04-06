@@ -1,14 +1,17 @@
 package com.hallow.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.lwjgl.glfw.GLFW;
 
 import com.hallow.client.cheat.CheatModule;
 import com.hallow.client.cheat.modules.AnchorPulseModule;
+import com.hallow.client.cheat.modules.AutoToolModule;
 import com.hallow.client.cheat.modules.AutoSprintModule;
+import com.hallow.client.cheat.modules.ChestStealerModule;
 import com.hallow.client.cheat.modules.CreativeAccessModule;
 import com.hallow.client.cheat.modules.FlightModule;
 import com.hallow.client.cheat.modules.FullbrightModule;
@@ -16,6 +19,8 @@ import com.hallow.client.cheat.modules.LootCompassModule;
 import com.hallow.client.cheat.modules.NoPushModule;
 import com.hallow.client.cheat.modules.NoRenderModule;
 import com.hallow.client.cheat.modules.NoSlowModule;
+import com.hallow.client.cheat.modules.NoWebModule;
+import com.hallow.client.cheat.modules.PlayerEspModule;
 import com.hallow.client.cheat.modules.ProjectilePredictModule;
 import com.hallow.client.cheat.modules.SafeWalkModule;
 import com.hallow.client.cheat.modules.StepAssistModule;
@@ -35,6 +40,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -50,27 +56,9 @@ public final class HallowClient implements ClientModInitializer {
     private static final int MINIMAP_TOGGLE_KEY = GLFW.GLFW_KEY_COMMA;
     private static final int COPY_TARGET_MAINHAND_KEY = GLFW.GLFW_KEY_H;
     private static final int COPY_TARGET_OFFHAND_KEY = GLFW.GLFW_KEY_J;
-    private static final int[] SLOT_KEYS = {
-        GLFW.GLFW_KEY_1,
-        GLFW.GLFW_KEY_2,
-        GLFW.GLFW_KEY_3,
-        GLFW.GLFW_KEY_4,
-        GLFW.GLFW_KEY_5,
-        GLFW.GLFW_KEY_6,
-        GLFW.GLFW_KEY_7,
-        GLFW.GLFW_KEY_8,
-        GLFW.GLFW_KEY_9,
-        GLFW.GLFW_KEY_0,
-        GLFW.GLFW_KEY_MINUS,
-        GLFW.GLFW_KEY_EQUAL,
-        GLFW.GLFW_KEY_LEFT_BRACKET,
-        GLFW.GLFW_KEY_RIGHT_BRACKET,
-        GLFW.GLFW_KEY_BACKSLASH
-    };
 
     private final List<CheatModule> modules = new ArrayList<>();
-    private final CheatModule[] slots = new CheatModule[SLOT_KEYS.length];
-    private final boolean[] slotPressed = new boolean[SLOT_KEYS.length];
+    private final Set<Integer> shortcutPressedKeys = new HashSet<>();
 
     private FullbrightModule fullbrightModule;
     private FlightModule flightModule;
@@ -87,6 +75,10 @@ public final class HallowClient implements ClientModInitializer {
     private SafeWalkModule safeWalkModule;
     private NoSlowModule noSlowModule;
     private NoPushModule noPushModule;
+    private PlayerEspModule playerEspModule;
+    private AutoToolModule autoToolModule;
+    private ChestStealerModule chestStealerModule;
+    private NoWebModule noWebModule;
     private HallowMinimapRenderer minimapRenderer;
     private boolean defaultsApplied;
     private boolean chordHeld;
@@ -100,25 +92,30 @@ public final class HallowClient implements ClientModInitializer {
         HallowConfigManager.load();
         XRayRules.reloadFromConfig();
 
-        fullbrightModule = register(new FullbrightModule(1));
-        flightModule = register(new FlightModule(2));
-        xRayModule = register(new XRayModule(3));
-        lootCompassModule = register(new LootCompassModule(4));
-        threatRadarModule = register(new ThreatRadarModule(5));
-        autoSprintModule = register(new AutoSprintModule(6));
-        stepAssistModule = register(new StepAssistModule(7));
-        swimAssistModule = register(new SwimAssistModule(8));
-        creativeAccessModule = register(new CreativeAccessModule(9));
-        anchorPulseModule = register(new AnchorPulseModule(10));
-        projectilePredictModule = register(new ProjectilePredictModule(11));
-        noRenderModule = register(new NoRenderModule(12));
-        safeWalkModule = register(new SafeWalkModule(13));
-        noSlowModule = register(new NoSlowModule(14));
-        noPushModule = register(new NoPushModule(15));
+        fullbrightModule = register(new FullbrightModule(GLFW.GLFW_KEY_1));
+        flightModule = register(new FlightModule(GLFW.GLFW_KEY_2));
+        xRayModule = register(new XRayModule(GLFW.GLFW_KEY_3));
+        lootCompassModule = register(new LootCompassModule(GLFW.GLFW_KEY_4));
+        threatRadarModule = register(new ThreatRadarModule(GLFW.GLFW_KEY_5));
+        autoSprintModule = register(new AutoSprintModule(GLFW.GLFW_KEY_6));
+        stepAssistModule = register(new StepAssistModule(GLFW.GLFW_KEY_7));
+        swimAssistModule = register(new SwimAssistModule(GLFW.GLFW_KEY_8));
+        creativeAccessModule = register(new CreativeAccessModule(GLFW.GLFW_KEY_9));
+        anchorPulseModule = register(new AnchorPulseModule(GLFW.GLFW_KEY_0));
+        projectilePredictModule = register(new ProjectilePredictModule(GLFW.GLFW_KEY_MINUS));
+        noRenderModule = register(new NoRenderModule(GLFW.GLFW_KEY_EQUAL));
+        safeWalkModule = register(new SafeWalkModule(GLFW.GLFW_KEY_LEFT_BRACKET));
+        noSlowModule = register(new NoSlowModule(GLFW.GLFW_KEY_RIGHT_BRACKET));
+        noPushModule = register(new NoPushModule(GLFW.GLFW_KEY_BACKSLASH));
+        playerEspModule = register(new PlayerEspModule(GLFW.GLFW_KEY_P));
+        autoToolModule = register(new AutoToolModule(GLFW.GLFW_KEY_T));
+        chestStealerModule = register(new ChestStealerModule(GLFW.GLFW_KEY_C));
+        noWebModule = register(new NoWebModule(GLFW.GLFW_KEY_W));
         minimapRenderer = new HallowMinimapRenderer();
 
         new XRayRenderer(xRayModule).register();
         new ProjectilePredictRenderer(projectilePredictModule).register();
+        new PlayerEspRenderer(playerEspModule).register();
 
         ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
@@ -150,9 +147,9 @@ public final class HallowClient implements ClientModInitializer {
             defaultsApplied = false;
         }
 
+        handleChordInput(client);
         handleCreativeShortcut(client);
         handleMinimapToggle(client);
-        handleChordInput(client);
         HallowCameraController.tick(client);
         handleTargetCopyShortcuts(client);
 
@@ -167,6 +164,11 @@ public final class HallowClient implements ClientModInitializer {
 
     private void handleCreativeShortcut(Minecraft client) {
         if (client.player == null || client.getWindow() == null || client.screen != null) {
+            creativeShortcutPressed = false;
+            return;
+        }
+
+        if (HallowInputCapture.isChordCaptureActive(client)) {
             creativeShortcutPressed = false;
             return;
         }
@@ -188,38 +190,47 @@ public final class HallowClient implements ClientModInitializer {
     private void handleChordInput(Minecraft client) {
         if (client.player == null || client.getWindow() == null || client.screen != null) {
             chordHeld = false;
-            Arrays.fill(slotPressed, false);
+            shortcutPressedKeys.clear();
             return;
         }
 
         long window = client.getWindow().handle();
-        chordHeld = GLFW.glfwGetKey(window, CHORD_KEY) == GLFW.GLFW_PRESS;
+        boolean captureActive = GLFW.glfwGetKey(window, CHORD_KEY) == GLFW.GLFW_PRESS;
+        if (captureActive && !chordHeld) {
+            KeyMapping.releaseAll();
+            shortcutPressedKeys.clear();
+        }
+
+        chordHeld = captureActive;
         if (!chordHeld) {
-            Arrays.fill(slotPressed, false);
+            shortcutPressedKeys.clear();
             return;
         }
 
-        for (int index = 0; index < SLOT_KEYS.length; index++) {
-            boolean down = GLFW.glfwGetKey(window, SLOT_KEYS[index]) == GLFW.GLFW_PRESS;
+        for (CheatModule module : modules) {
+            int shortcutKey = module.slot();
+            boolean down = GLFW.glfwGetKey(window, shortcutKey) == GLFW.GLFW_PRESS;
             if (!down) {
-                slotPressed[index] = false;
+                shortcutPressedKeys.remove(shortcutKey);
                 continue;
             }
 
-            if (slotPressed[index]) {
+            if (shortcutPressedKeys.contains(shortcutKey)) {
                 continue;
             }
 
-            slotPressed[index] = true;
-            CheatModule module = slots[index];
-            if (module != null) {
-                module.trigger(client);
-            }
+            shortcutPressedKeys.add(shortcutKey);
+            module.trigger(client);
         }
     }
 
     private void handleMinimapToggle(Minecraft client) {
         if (client.player == null || client.getWindow() == null || client.screen != null) {
+            minimapTogglePressed = false;
+            return;
+        }
+
+        if (HallowInputCapture.isChordCaptureActive(client)) {
             minimapTogglePressed = false;
             return;
         }
@@ -240,6 +251,12 @@ public final class HallowClient implements ClientModInitializer {
 
     private void handleTargetCopyShortcuts(Minecraft client) {
         if (client.player == null || client.getWindow() == null || client.screen != null) {
+            targetMainhandPressed = false;
+            targetOffhandPressed = false;
+            return;
+        }
+
+        if (HallowInputCapture.isChordCaptureActive(client)) {
             targetMainhandPressed = false;
             targetOffhandPressed = false;
             return;
@@ -317,7 +334,7 @@ public final class HallowClient implements ClientModInitializer {
         minimapTogglePressed = false;
         targetMainhandPressed = false;
         targetOffhandPressed = false;
-        Arrays.fill(slotPressed, false);
+        shortcutPressedKeys.clear();
         for (CheatModule module : modules) {
             module.reset(client);
         }
@@ -328,6 +345,7 @@ public final class HallowClient implements ClientModInitializer {
         HallowRuntimeState.setSafeWalkEnabled(false);
         HallowRuntimeState.setNoSlowEnabled(false);
         HallowRuntimeState.setNoPushEnabled(false);
+        HallowRuntimeState.setNoWebEnabled(false);
         HallowRuntimeState.setNoRenderEnabled(false);
     }
 
@@ -350,6 +368,10 @@ public final class HallowClient implements ClientModInitializer {
         applyModuleState(client, safeWalkModule, state, config.safeWalk.autoEnable);
         applyModuleState(client, noSlowModule, state, config.noSlow.autoEnable);
         applyModuleState(client, noPushModule, state, config.noPush.autoEnable);
+        applyModuleState(client, playerEspModule, state, config.playerEsp.autoEnable);
+        applyModuleState(client, autoToolModule, state, config.autoTool.autoEnable);
+        applyModuleState(client, chestStealerModule, state, config.chestStealer.autoEnable);
+        applyModuleState(client, noWebModule, state, config.noWeb.autoEnable);
         creativeAccessModule.restoreEnabledState(client, moduleEnabled(state, creativeAccessModule.name(), config.creativeAccess.autoEnable));
         applyModuleState(client, noRenderModule, state, config.noRender.autoEnable);
 
@@ -455,7 +477,6 @@ public final class HallowClient implements ClientModInitializer {
 
     private <T extends CheatModule> T register(T module) {
         modules.add(module);
-        slots[module.slot() - 1] = module;
         return module;
     }
 
