@@ -52,6 +52,7 @@ import net.minecraft.world.item.ItemStack;
 public final class HallowClient implements ClientModInitializer {
     public static final String MOD_ID = "hallow";
     private static final int CHORD_KEY = GLFW.GLFW_KEY_F6;
+    private static final int HUD_TOGGLE_KEY = GLFW.GLFW_KEY_F7;
     private static final int CREATIVE_SHORTCUT_KEY = GLFW.GLFW_KEY_V;
     private static final int MINIMAP_TOGGLE_KEY = GLFW.GLFW_KEY_COMMA;
     private static final int COPY_TARGET_MAINHAND_KEY = GLFW.GLFW_KEY_H;
@@ -59,6 +60,7 @@ public final class HallowClient implements ClientModInitializer {
 
     private final List<CheatModule> modules = new ArrayList<>();
     private final Set<Integer> shortcutPressedKeys = new HashSet<>();
+    private final HallowHudRenderer hudRenderer = new HallowHudRenderer();
 
     private FullbrightModule fullbrightModule;
     private FlightModule flightModule;
@@ -82,6 +84,8 @@ public final class HallowClient implements ClientModInitializer {
     private HallowMinimapRenderer minimapRenderer;
     private boolean defaultsApplied;
     private boolean chordHeld;
+    private boolean hudVisible = true;
+    private boolean hudTogglePressed;
     private boolean creativeShortcutPressed;
     private boolean minimapTogglePressed;
     private boolean targetMainhandPressed;
@@ -148,6 +152,7 @@ public final class HallowClient implements ClientModInitializer {
         }
 
         handleChordInput(client);
+        handleHudToggle(client);
         handleCreativeShortcut(client);
         handleMinimapToggle(client);
         HallowCameraController.tick(client);
@@ -249,6 +254,28 @@ public final class HallowClient implements ClientModInitializer {
         minimapRenderer.toggle(client);
     }
 
+    private void handleHudToggle(Minecraft client) {
+        if (client.player == null || client.getWindow() == null || client.screen != null) {
+            hudTogglePressed = false;
+            return;
+        }
+
+        boolean down = GLFW.glfwGetKey(client.getWindow().handle(), HUD_TOGGLE_KEY) == GLFW.GLFW_PRESS;
+        if (!down) {
+            hudTogglePressed = false;
+            return;
+        }
+
+        if (hudTogglePressed) {
+            return;
+        }
+
+        hudTogglePressed = true;
+        hudVisible = !hudVisible;
+        HallowStorage.markDirty();
+        announce(client, hudVisible ? "HUD shown." : "HUD hidden.");
+    }
+
     private void handleTargetCopyShortcuts(Minecraft client) {
         if (client.player == null || client.getWindow() == null || client.screen != null) {
             targetMainhandPressed = false;
@@ -278,58 +305,113 @@ public final class HallowClient implements ClientModInitializer {
 
     private void renderHud(GuiGraphics graphics, DeltaTracker tickCounter) {
         Minecraft client = Minecraft.getInstance();
-        List<String> lines = new ArrayList<>();
-
-        for (CheatModule module : modules) {
-            lines.addAll(module.hudLines(client));
-        }
-        lines.addAll(HallowCameraController.hudLines(client));
-
-        if (chordHeld) {
-            if (!lines.isEmpty()) {
-                lines.add("");
-            }
-
-            for (CheatModule module : modules) {
-                lines.add(module.legendLine(client));
-            }
-        }
-
-        if (!lines.isEmpty()) {
-            String title = chordHeld ? "Hallow // F6 held" : "Hallow";
-            int widestLine = client.font.width(title);
-            for (String line : lines) {
-                widestLine = Math.max(widestLine, client.font.width(line));
-            }
-
+        if (hudVisible) {
             HallowConfig config = HallowConfigManager.get();
-            int left = config.hud.left;
-            int top = config.hud.top;
-            int lineHeight = client.font.lineHeight + 2;
-            int height = (lines.size() + 1) * lineHeight + 8;
-            int width = widestLine + 12;
-
-            graphics.fill(left - 6, top - 6, left + width + 2, top + height + 2, 0x88070A10);
-            graphics.fill(left - 4, top - 4, left + width, top + height, 0xC0121823);
-            graphics.fill(left - 4, top - 4, left + width, top - 2, 0xFFB88C3A);
-            graphics.drawString(client.font, title, left, top, 0xFFF2D8A0, true);
-
-            int y = top + lineHeight;
-            for (String line : lines) {
-                if (!line.isEmpty()) {
-                    graphics.drawString(client.font, line, left, y, 0xFFFFFFFF, true);
-                }
-                y += lineHeight;
-            }
+            hudRenderer.render(graphics, client, config.hud.left, config.hud.top, buildHudSections(client));
+            renderSelectedPlayerOverlay(graphics, client);
         }
 
-        renderSelectedPlayerOverlay(graphics, client);
-        minimapRenderer.render(graphics, client);
+        if (hudVisible) {
+            minimapRenderer.render(graphics, client);
+        }
+    }
+
+    private List<HallowHudRenderer.Section> buildHudSections(Minecraft client) {
+        List<HallowHudRenderer.Section> sections = new ArrayList<>();
+        sections.add(new HallowHudRenderer.Section("Overview", 0xFFCA9746, buildOverviewLines(client)));
+        sections.add(moduleSection("Vision", 0xFF7EA7DA, client, fullbrightModule, xRayModule, noRenderModule, playerEspModule));
+        sections.add(moduleSection("Traversal", 0xFF61B887, client, flightModule, autoSprintModule, stepAssistModule, swimAssistModule, autoToolModule, safeWalkModule, noSlowModule, noPushModule, noWebModule));
+        sections.add(moduleSection("Awareness", 0xFF9A8BE6, client, lootCompassModule, threatRadarModule, projectilePredictModule));
+        sections.add(moduleSection("Access", 0xFFE29F63, client, creativeAccessModule, chestStealerModule, anchorPulseModule));
+        sections.add(new HallowHudRenderer.Section("Camera", 0xFF55B6C7, buildCameraLines(client)));
+        sections.add(new HallowHudRenderer.Section("Protection", 0xFFC96C6C, buildProtectionLines()));
+        sections.add(new HallowHudRenderer.Section("Controls", 0xFFB9C06E, List.of(
+            "Hold F6 for cheat shortcuts.",
+            "F7 toggles this HUD.",
+            ", toggles the minimap.",
+            "V opens HallowInv.",
+            "H/J copy the selected target's hands."
+        )));
+        return sections;
+    }
+
+    private List<String> buildOverviewLines(Minecraft client) {
+        List<String> lines = new ArrayList<>();
+        lines.add("Enabled toggles: " + countEnabledToggles());
+        lines.add(chordHeld ? "Shortcut chord: ACTIVE" : "Shortcut chord: idle");
+
+        List<String> liveLines = new ArrayList<>();
+        for (CheatModule module : modules) {
+            liveLines.addAll(module.hudLines(client));
+        }
+        liveLines.addAll(HallowCameraController.hudLines(client));
+
+        if (minimapRenderer.isVisible()) {
+            liveLines.add("Minimap: ON");
+        }
+
+        if (liveLines.isEmpty()) {
+            lines.add("No live module data.");
+        } else {
+            lines.addAll(liveLines);
+        }
+
+        return lines;
+    }
+
+    private List<String> buildCameraLines(Minecraft client) {
+        List<String> lines = new ArrayList<>(HallowCameraController.hudLines(client));
+        if (!lines.isEmpty()) {
+            lines.add("");
+        }
+        lines.add("B save | Shift+B clear");
+        lines.add("N cycle saved views");
+        lines.add("M browse player cameras");
+        lines.add("L lock | K follow");
+        return lines;
+    }
+
+    private List<String> buildProtectionLines() {
+        HallowConfig.ProtectionSettings protection = HallowConfigManager.get().protection;
+        return List.of(
+            "Invulnerable: " + onOff(protection.invulnerable),
+            "Fall damage: " + blocked(protection.blockFallDamage),
+            "PvP: " + blocked(protection.blockPvpDamage),
+            "Keep inventory: " + onOff(protection.keepInventory)
+        );
+    }
+
+    private HallowHudRenderer.Section moduleSection(String title, int accentColor, Minecraft client, CheatModule... sectionModules) {
+        List<String> lines = new ArrayList<>(sectionModules.length);
+        for (CheatModule module : sectionModules) {
+            lines.add(module.legendLine(client));
+        }
+        return new HallowHudRenderer.Section(title, accentColor, lines);
+    }
+
+    private int countEnabledToggles() {
+        int count = 0;
+        for (CheatModule module : modules) {
+            if (module.isToggleable() && module.isEnabled()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private String onOff(boolean enabled) {
+        return enabled ? "ON" : "OFF";
+    }
+
+    private String blocked(boolean enabled) {
+        return enabled ? "BLOCKED" : "LIVE";
     }
 
     private void resetModules(Minecraft client) {
         defaultsApplied = false;
         chordHeld = false;
+        hudVisible = HallowConfigManager.get().hud.startVisible;
+        hudTogglePressed = false;
         creativeShortcutPressed = false;
         minimapTogglePressed = false;
         targetMainhandPressed = false;
@@ -375,6 +457,7 @@ public final class HallowClient implements ClientModInitializer {
         creativeAccessModule.restoreEnabledState(client, moduleEnabled(state, creativeAccessModule.name(), config.creativeAccess.autoEnable));
         applyModuleState(client, noRenderModule, state, config.noRender.autoEnable);
 
+        hudVisible = state.loadedFromDisk ? state.hudVisible : config.hud.startVisible;
         minimapRenderer.setVisible(state.loadedFromDisk ? state.minimapVisible : config.minimap.startEnabled);
         HallowCameraController.loadSavedPoints(state.savedCameras.stream()
             .map(camera -> new HallowCameraController.CameraPoint(camera.dimension, new net.minecraft.world.phys.Vec3(camera.x, camera.y, camera.z), camera.yaw, camera.pitch))
@@ -406,6 +489,7 @@ public final class HallowClient implements ClientModInitializer {
                 state.enabledModules.put(module.name(), module.isEnabled());
             }
         }
+        state.hudVisible = hudVisible;
         state.minimapVisible = minimapRenderer.isVisible();
         state.savedCameras = HallowCameraController.exportSavedPoints().stream().map(point -> {
             HallowProfileState.SavedCamera saved = new HallowProfileState.SavedCamera();
@@ -427,16 +511,18 @@ public final class HallowClient implements ClientModInitializer {
             return;
         }
 
-        int centerX = client.getWindow().getGuiScaledWidth() / 2;
+        int screenWidth = client.getWindow().getGuiScaledWidth();
+        int centerX = screenWidth / 2;
         int top = 8;
         String title = "Selected: " + target.name();
         String detail = target.livePlayer() == null
             ? "Snapshot only: H/J unavailable"
             : "H main -> held | J off -> offhand";
         int textWidth = Math.max(client.font.width(title), client.font.width(detail));
-        int panelWidth = Math.max(180, textWidth + 18);
-        int left = centerX - panelWidth / 2;
-        int right = left + panelWidth;
+        int panelWidth = Math.min(screenWidth - 16, Math.max(180, textWidth + 18));
+        int left = Math.max(8, centerX - panelWidth / 2);
+        int right = Math.min(screenWidth - 8, left + panelWidth);
+        centerX = left + ((right - left) / 2);
         int bottom = top + 54;
 
         graphics.fill(left, top, right, bottom, 0xCC11161E);

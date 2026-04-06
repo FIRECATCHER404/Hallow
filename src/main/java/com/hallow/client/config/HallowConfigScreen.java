@@ -422,6 +422,8 @@ public final class HallowConfigScreen extends Screen {
             bottom += 24;
             addPageWidget(new IntSlider(left, bottom, width, "Saved Camera Limit", 1, 64, workingCopy.camera.maxSavedPoints, value -> workingCopy.camera.maxSavedPoints = value, value -> Integer.toString(value)));
             bottom += 24;
+            addPageWidget(toggle(left, bottom, "Show HUD On Join", workingCopy.hud.startVisible, value -> workingCopy.hud.startVisible = value));
+            bottom += 24;
             addPageWidget(toggle(left, bottom, "Show Minimap On Join", workingCopy.minimap.startEnabled, value -> workingCopy.minimap.startEnabled = value));
             bottom += 24;
             addPageWidget(new IntSlider(left, bottom, width, "Minimap Size", 96, 196, workingCopy.minimap.size, value -> workingCopy.minimap.size = value, value -> value + "px"));
@@ -455,6 +457,8 @@ public final class HallowConfigScreen extends Screen {
         addPageWidget(toggle(left, leftBottom, "Chest Stealer Auto-Enable", workingCopy.chestStealer.autoEnable, value -> workingCopy.chestStealer.autoEnable = value));
         leftBottom += 24;
         addPageWidget(new IntSlider(left, leftBottom, columnWidth, "Saved Camera Limit", 1, 64, workingCopy.camera.maxSavedPoints, value -> workingCopy.camera.maxSavedPoints = value, value -> Integer.toString(value)));
+        leftBottom += 24;
+        addPageWidget(toggle(left, leftBottom, "Show HUD On Join", workingCopy.hud.startVisible, value -> workingCopy.hud.startVisible = value));
         leftBottom += 24;
         addPageWidget(toggle(left, leftBottom, "Show Minimap On Join", workingCopy.minimap.startEnabled, value -> workingCopy.minimap.startEnabled = value));
         leftBottom += 24;
@@ -562,7 +566,7 @@ public final class HallowConfigScreen extends Screen {
             graphics.drawString(this.font, "Tracked X-Ray blocks (comma-separated ids; blank resets to ore defaults)", xRayBlocksBox.getX(), xRayBlocksBox.getY() - 11, 0xFF8FA0B8, false);
             graphics.drawString(this.font, "Current list resolves to " + parseBlockList(xRayBlocksBox.getValue()).size() + " block ids", xRayBlocksBox.getX(), xRayBlocksBox.getY() + 25, 0xFF8FA0B8, false);
         } else if (category == Category.ACCESS_AND_HUD) {
-            graphics.drawCenteredString(this.font, Component.literal("Hallow data lives in .hallow. HallowInv syncs in singleplayer and Hallow servers. Camera: B save, N cycle, M select, L lock, K follow."), this.width / 2, helperTextY(), 0xFF8FA0B8);
+            graphics.drawCenteredString(this.font, Component.literal("Hallow data lives in .hallow. F7 toggles the HUD deck. Camera: B save, N cycle, M select, L lock, K follow."), this.width / 2, helperTextY(), 0xFF8FA0B8);
         } else if (category == Category.PROTECTION) {
             graphics.drawCenteredString(this.font, Component.literal("Protection settings sync to singleplayer and Hallow-enabled servers."), this.width / 2, helperTextY(), 0xFF8FA0B8);
         }
@@ -572,7 +576,7 @@ public final class HallowConfigScreen extends Screen {
             graphics.drawString(this.font, Component.literal(scrollOffset + " / " + maxScroll), panelRight - 42, contentTop() + 6, 0xFF8FA0B8, false);
         }
 
-        graphics.drawCenteredString(this.font, Component.literal("Hold F6 to capture input. Shortcuts include 1-0, -, =, [, ], \\, plus P/T/C/W. V opens HallowInv. H/J copy target hands."), this.width / 2, helperTextY() + 14, 0xFF8FA0B8);
+        graphics.drawCenteredString(this.font, Component.literal("Hold F6 for cheat shortcuts only. F7 toggles the HUD. Shortcuts include 1-0, -, =, [, ], \\, plus P/T/C/W. V opens HallowInv. H/J copy target hands."), this.width / 2, helperTextY() + 14, 0xFF8FA0B8);
 
         super.render(graphics, mouseX, mouseY, partialTick);
     }
@@ -723,7 +727,7 @@ public final class HallowConfigScreen extends Screen {
         VISION("Vision", "Vision stack: Fullbright, X-Ray, and NoRender"),
         TRAVERSAL("Traversal", "Movement cheats and mobility tuning"),
         AWARENESS("Awareness", "Radar, trajectory previews, and nearby tracking"),
-        ACCESS_AND_HUD("Access/HUD", "HallowInv, camera points, anchors, and overlay"),
+        ACCESS_AND_HUD("Access/HUD", "HallowInv, camera points, anchors, minimap, and HUD deck"),
         PROTECTION("Protection", "Damage immunity, keep-inventory, and PvP shields");
 
         private final String label;

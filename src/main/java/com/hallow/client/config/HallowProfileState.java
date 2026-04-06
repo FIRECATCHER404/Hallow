@@ -11,6 +11,7 @@ public final class HallowProfileState {
     public String source = "unknown";
     public long updatedAtEpochMillis = System.currentTimeMillis();
     public LinkedHashMap<String, Boolean> enabledModules = new LinkedHashMap<>();
+    public boolean hudVisible = true;
     public boolean minimapVisible;
     public List<SavedCamera> savedCameras = new ArrayList<>();
     public SavedAnchor anchor = new SavedAnchor();

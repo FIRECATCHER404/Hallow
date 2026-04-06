@@ -151,6 +151,7 @@ public final class HallowConfig {
     }
 
     public static final class HudSettings {
+        public boolean startVisible = true;
         public int left = 8;
         public int top = 8;
     }
