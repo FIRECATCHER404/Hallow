@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.hallow.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "LivingEntityProtectionMixin",
+    "PlayerProtectionMixin",
+    "ServerPlayerProtectionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

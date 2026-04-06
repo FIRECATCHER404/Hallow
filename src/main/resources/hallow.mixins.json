@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "package": "com.hallow.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "BlockStateBaseMixin",
+    "CameraAccessor",
+    "CameraMixin",
+    "EntityMixin",
+    "EntityRendererMixin",
+    "FogRendererMixin",
+    "GameRendererMixin",
+    "GuiMixin",
+    "LevelRendererMixin",
+    "LightTextureMixin",
+    "LocalPlayerMixin",
+    "MouseHandlerMixin",
+    "PlayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

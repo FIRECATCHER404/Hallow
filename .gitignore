@@ -1,0 +1,10 @@
+.gradle/
+.gradle-local/
+.gradle-home/
+build/
+.local-libs/
+out/
+run/
+*.iml
+.idea/
+.vscode/

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "hallow",
+  "version": "${version}",
+  "name": "Hallow",
+  "description": "Hallow client mod with optional server-authoritative HallowInv support.",
+  "icon": "assets/hallow/icon.png",
+  "authors": [
+    "Firecatcher303"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.hallow.Hallow"
+    ],
+    "client": [
+      "com.hallow.client.HallowClient"
+    ],
+    "modmenu": [
+      "com.hallow.client.config.HallowModMenuApi"
+    ]
+  },
+  "mixins": [
+    "hallow.common.mixins.json",
+    "hallow.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.2",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
