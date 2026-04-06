@@ -1,53 +1,108 @@
 # Hallow
 
-`Hallow` is a client-side Fabric mod scaffold for permissive servers or private testing worlds. It ships with a small keybind-driven cheat module system and a first batch of features:
+`Hallow` is a client-side Fabric cheat mod for Minecraft `1.21.11`.
 
-- Classic cheats:
-  - `Fullbright`
-  - `Fly`
-  - `X-Ray`
-- Original utility cheats:
-  - `Loot Compass`
-  - `Threat Radar`
-  - `Anchor Pulse`
+This is not a server-testing scaffold anymore. It is a full cheat client mod with vision, movement, awareness, camera, inventory, and protection features, plus a small HUD-driven control layer built around quick in-game toggles.
 
-## Mod Menu Config
+## Current Feature Set
 
-If you install Mod Menu, `Hallow` exposes a full config screen from the mod's `Configure` button. Settings are also persisted in `config/hallow.json`.
+### Vision
 
-Configurable options include:
+- `Fullbright` using the same render path as night vision
+- `X-Ray` with `ESP`, `Spectator View`, and `Ore Mode`
+- `NoRender` for fog, overlays, bobbing, and damage tilt removal
 
-- `Fullbright`: auto-enable and gamma value
-- `Fly`: auto-enable and flight speed
-- `X-Ray`: auto-enable, mode, scan radii, target cap, spectator peek distance, spectator push depth
-- `Loot Compass`: auto-enable, search radius, scan interval
-- `Threat Radar`: auto-enable, search radius, scan interval, blindside threshold
-- `Anchor Pulse`: anchor persistence, exact coordinate HUD output
-- HUD offsets for the overlay itself
+### Movement
 
-### X-Ray Modes
+- `Fly`
+- `AutoSprint`
+- `StepAssist`
+- `SwimAssist`
+- `SafeWalk`
+- `NoSlow`
+- `NoPush`
 
-- `ESP`: scans nearby ore blocks and draws colored boxes through terrain
-- `Spectator View`: pushes the camera into the block you're looking at to give the inside-a-block spectator peek effect
-- `Ore Mode`: hides normal block geometry and leaves ores plus water/lava visible
+### Awareness
 
-## Default Binds
+- `Loot Compass`
+- `Threat Radar`
+- `Projectile Predict`
+- `Minimap`
 
-- `R`: Fullbright
-- `G`: Fly
-- `X`: X-Ray
-- `C`: Loot Compass
-- `V`: Threat Radar
-- `H`: Anchor Pulse
-- `Shift + H`: Clear Anchor Pulse
+### Camera / Utility
 
-All binds can be changed in `Options -> Controls -> Key Binds -> Hallow Cheats`.
+- Saved camera points
+- Player camera browse / lock / follow
+- Live target hand copy
+- `Anchor Pulse`
+- `HallowInv`
+
+### Protection
+
+- Invulnerability toggle support
+- Fall damage blocking / no-fall spoofing
+- Fire, freeze, drowning, and PvP damage blocking
+- Keep-inventory support
+
+## Controls
+
+### Cheat Toggles
+
+Hold `F6` and press:
+
+- `1`: `Fullbright`
+- `2`: `Fly`
+- `3`: `X-Ray`
+- `4`: `Loot Compass`
+- `5`: `Threat Radar`
+- `6`: `AutoSprint`
+- `7`: `StepAssist`
+- `8`: `SwimAssist`
+- `9`: `HallowInv`
+- `0`: `Anchor Pulse`
+- `-`: `Projectile Predict`
+- `=`: `NoRender`
+- `[`: `SafeWalk`
+- `]`: `NoSlow`
+- `\`: `NoPush`
+
+### Other Shortcuts
+
+- `V`: open `HallowInv`
+- `,`: toggle minimap
+
+### Camera Controls
+
+- `B`: save the current camera point
+- `Shift + B`: clear saved camera points for the current dimension
+- `N`: cycle saved camera points
+- `M`: browse player cameras
+- Mouse wheel while browsing: change selected player
+- `L`: lock the camera to the selected player point / return from locked view
+- `K`: live follow the selected player / return from follow view
+- `H`: copy the selected live target's main hand into your held slot
+- `J`: copy the selected live target's offhand into your offhand slot
+
+## Config
+
+If `Mod Menu` is installed, `Hallow` exposes a config screen from the mod list.
+
+Runtime config is stored in:
+
+- `.hallow/config.json`
+
+Per-world / per-server state is stored in:
+
+- `.hallow/profiles/`
+
+That includes enabled module state, saved camera points, minimap visibility, and anchor state.
 
 ## Notes
 
-- `Fly` is implemented as forced client-side creative flight. It works best where the server/plugin explicitly allows it.
-- `X-Ray` now supports `ESP`, `Spectator View`, and `Ore Mode`.
-- `Loot Compass`, `Threat Radar`, and `Anchor Pulse` are HUD-focused helpers, so they remain useful on strict servers too.
+- Most features are client-side cheats. Some inventory and protection behavior has better sync in singleplayer or on Hallow-enabled servers.
+- `HallowInv` supports live client inventory editing, with extra sync support where the matching server payload exists.
+- `Projectile Predict` renders a translucent arc with landing marker instead of a simple point trail.
+- Player camera browsing is detached from your movement entity, so you can still move while looking through another player's view.
 
 ## Build
 
@@ -57,10 +112,14 @@ Use the Gradle wrapper:
 .\gradlew.bat build
 ```
 
-The built jar will be placed in `build\libs`.
+The built jars are written to `build\libs`.
 
-## Still Missing
+## Releases
 
-- No automated tests or sandbox build verification yet.
-- The mod does not include packet-level cheats; everything here is client-side only.
-- `X-Ray` currently targets common ores and ancient debris; if you want custom block lists, add them in `XRayModule`.
+The repository includes a GitHub Actions workflow that builds the mod and publishes release assets from pushes to `main`.
+
+## Missing / Limits
+
+- No automated gameplay test coverage yet.
+- This is still a Fabric mod, not an external injector or packet spam client.
+- Behavior on strict anticheat servers will depend on what the server actually accepts.
