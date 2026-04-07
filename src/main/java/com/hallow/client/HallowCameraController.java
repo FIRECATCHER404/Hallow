@@ -176,6 +176,98 @@ public final class HallowCameraController {
         return List.of();
     }
 
+    public static boolean isPlayerBrowseActive() {
+        return mode == Mode.PLAYER_BROWSE;
+    }
+
+    public static boolean isLockedTargetActive() {
+        return mode == Mode.LOCKED_TARGET;
+    }
+
+    public static boolean isFollowTargetActive() {
+        return mode == Mode.FOLLOW_TARGET;
+    }
+
+    public static int savedPointCount() {
+        return SAVED_POINTS.size();
+    }
+
+    public static String currentTargetName(Minecraft client) {
+        BrowseTarget target = currentSelectedTarget(client);
+        if (target != null) {
+            return target.name();
+        }
+
+        return lockedTargetName;
+    }
+
+    public static void saveCurrentViewFromMenu(Minecraft client) {
+        if (client == null || client.player == null || client.level == null) {
+            return;
+        }
+
+        saveCurrentView(client);
+    }
+
+    public static void clearCurrentDimensionPointsFromMenu(Minecraft client) {
+        if (client == null || client.player == null || client.level == null) {
+            return;
+        }
+
+        clearCurrentDimensionPoints(client);
+    }
+
+    public static void cycleSavedViewFromMenu(Minecraft client) {
+        if (client == null || client.player == null || client.level == null) {
+            return;
+        }
+
+        cycleSavedView(client);
+    }
+
+    public static void togglePlayerBrowseFromMenu(Minecraft client) {
+        if (client == null || client.player == null || client.level == null) {
+            return;
+        }
+
+        if (mode == Mode.PLAYER_BROWSE) {
+            exitPlayerBrowse(client, "Returned to player camera.");
+            return;
+        }
+
+        enterPlayerBrowse(client);
+    }
+
+    public static void toggleLockCurrentTargetFromMenu(Minecraft client) {
+        if (client == null || client.player == null || client.level == null) {
+            return;
+        }
+
+        if (mode == Mode.PLAYER_BROWSE) {
+            lockJumpToCurrentTarget(client);
+            return;
+        }
+
+        if (mode == Mode.LOCKED_TARGET) {
+            exitLockedView(client, "Returned to player camera.");
+        }
+    }
+
+    public static void toggleFollowCurrentTargetFromMenu(Minecraft client) {
+        if (client == null || client.player == null || client.level == null) {
+            return;
+        }
+
+        if (mode == Mode.PLAYER_BROWSE) {
+            followCurrentTarget(client);
+            return;
+        }
+
+        if (mode == Mode.FOLLOW_TARGET) {
+            exitLockedView(client, "Returned to player camera.");
+        }
+    }
+
     public static boolean isFixedViewActive() {
         return mode == Mode.SAVED_POINT;
     }

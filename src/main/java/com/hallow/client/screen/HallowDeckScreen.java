@@ -7,6 +7,7 @@ import com.hallow.client.HallowHudRenderer;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 public final class HallowDeckScreen extends Screen {
@@ -19,6 +20,7 @@ public final class HallowDeckScreen extends Screen {
     private final HallowClient owner;
     private final HallowHudRenderer renderer = new HallowHudRenderer();
 
+    private List<HallowHudRenderer.ClickTarget> clickTargets = List.of();
     private int scrollOffset;
     private int maxScroll;
 
@@ -50,6 +52,26 @@ public final class HallowDeckScreen extends Screen {
     }
 
     @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (super.mouseClicked(event, doubleClick)) {
+            return true;
+        }
+
+        if (event.button() != 0) {
+            return false;
+        }
+
+        for (HallowHudRenderer.ClickTarget target : clickTargets) {
+            if (target.contains(event.x(), event.y())) {
+                target.action().run();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
     public void onClose() {
         if (this.minecraft != null) {
             this.minecraft.setScreen(null);
@@ -58,7 +80,7 @@ public final class HallowDeckScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        List<HallowHudRenderer.Section> sections = owner.buildHudSections(this.minecraft);
+        List<HallowHudRenderer.Section> sections = owner.buildDeckSections(this.minecraft);
         int frameLeft = SCREEN_MARGIN;
         int frameTop = SCREEN_MARGIN;
         int frameRight = this.width - SCREEN_MARGIN;
@@ -82,11 +104,23 @@ public final class HallowDeckScreen extends Screen {
         graphics.fill(viewportLeft, viewportTop, viewportRight, viewportBottom, 0x7A101824);
 
         graphics.drawCenteredString(this.font, this.title, this.width / 2, frameTop + 8, 0xFFF4E5BF);
-        graphics.drawCenteredString(this.font, Component.literal("F7 or ESC closes. Mouse wheel scrolls. F6 stays shortcut-only."), this.width / 2, frameTop + 20, 0xFFB5C0D1);
+        graphics.drawCenteredString(this.font, Component.literal("Click any row to run it. F7 or ESC closes. Mouse wheel scrolls."), this.width / 2, frameTop + 20, 0xFFB5C0D1);
 
         graphics.enableScissor(viewportLeft, viewportTop, viewportRight, viewportBottom);
-        renderer.renderViewport(graphics, this.font, sections, viewportLeft, viewportTop, viewportWidth, viewportHeight, scrollOffset);
+        HallowHudRenderer.RenderResult renderResult = renderer.renderViewport(
+            graphics,
+            this.font,
+            sections,
+            viewportLeft,
+            viewportTop,
+            viewportWidth,
+            viewportHeight,
+            scrollOffset,
+            mouseX,
+            mouseY
+        );
         graphics.disableScissor();
+        clickTargets = renderResult.clickTargets();
 
         if (maxScroll > 0) {
             int trackLeft = frameRight - 12;

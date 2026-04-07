@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -30,6 +32,7 @@ import com.hallow.client.cheat.modules.XRayModule;
 import com.hallow.client.config.HallowConfig;
 import com.hallow.client.config.HallowConfigManager;
 import com.hallow.client.config.HallowProfileState;
+import com.hallow.client.config.HallowConfigScreen;
 import com.hallow.client.config.HallowStorage;
 import com.hallow.client.screen.HallowDeckScreen;
 import com.hallow.network.HallowNetworking;
@@ -326,95 +329,124 @@ public final class HallowClient implements ClientModInitializer {
         minimapRenderer.render(graphics, client);
     }
 
-    public List<HallowHudRenderer.Section> buildHudSections(Minecraft client) {
+    public List<HallowHudRenderer.Section> buildDeckSections(Minecraft client) {
         List<HallowHudRenderer.Section> sections = new ArrayList<>();
-        sections.add(new HallowHudRenderer.Section("Overview", 0xFFCA9746, buildOverviewLines(client)));
-        sections.add(moduleSection("Vision", 0xFF7EA7DA, client, fullbrightModule, xRayModule, noRenderModule, playerEspModule));
-        sections.add(moduleSection("Traversal", 0xFF61B887, client, flightModule, autoSprintModule, stepAssistModule, swimAssistModule, autoToolModule, safeWalkModule, noSlowModule, noPushModule, noWebModule));
-        sections.add(moduleSection("Awareness", 0xFF9A8BE6, client, lootCompassModule, threatRadarModule, projectilePredictModule));
-        sections.add(moduleSection("Access", 0xFFE29F63, client, creativeAccessModule, chestStealerModule, anchorPulseModule));
-        sections.add(new HallowHudRenderer.Section("Camera", 0xFF55B6C7, buildCameraLines(client)));
-        sections.add(new HallowHudRenderer.Section("Protection", 0xFFC96C6C, buildProtectionLines()));
-        sections.add(new HallowHudRenderer.Section("Controls", 0xFFB9C06E, List.of(
-            "Hold F6 for cheat shortcuts.",
-            "F7 opens or closes this menu.",
-            ", toggles the minimap.",
-            "V opens HallowInv.",
-            "H/J copy the selected target's hands."
+        sections.add(new HallowHudRenderer.Section("Vision", 0xFF7EA7DA, List.of(
+            moduleEntry(client, fullbrightModule),
+            moduleEntry(client, xRayModule),
+            moduleEntry(client, noRenderModule),
+            moduleEntry(client, playerEspModule)
+        )));
+        sections.add(new HallowHudRenderer.Section("Traversal", 0xFF61B887, List.of(
+            moduleEntry(client, flightModule),
+            moduleEntry(client, autoSprintModule),
+            moduleEntry(client, stepAssistModule),
+            moduleEntry(client, swimAssistModule),
+            moduleEntry(client, autoToolModule),
+            moduleEntry(client, safeWalkModule),
+            moduleEntry(client, noSlowModule),
+            moduleEntry(client, noPushModule),
+            moduleEntry(client, noWebModule)
+        )));
+        sections.add(new HallowHudRenderer.Section("Awareness", 0xFF9A8BE6, List.of(
+            moduleEntry(client, lootCompassModule),
+            moduleEntry(client, threatRadarModule),
+            moduleEntry(client, projectilePredictModule)
+        )));
+        sections.add(new HallowHudRenderer.Section("Access", 0xFFE29F63, List.of(
+            moduleEntry(client, creativeAccessModule),
+            actionEntry("Open HallowInv", () -> creativeAccessModule.openFromShortcut(client), true, 0xFFCB9344),
+            moduleEntry(client, chestStealerModule),
+            actionEntry(anchorPulseModule.legendLine(client), () -> anchorPulseModule.trigger(client), true, 0xFFE2A654),
+            actionEntry("Minimap [" + onOff(minimapRenderer.isVisible()) + "]", () -> minimapRenderer.toggle(client), minimapRenderer.isVisible(), 0xFF66BFD7)
+        )));
+        sections.add(new HallowHudRenderer.Section("Camera", 0xFF55B6C7, List.of(
+            actionEntry("Save camera point [" + HallowCameraController.savedPointCount() + "]", () -> HallowCameraController.saveCurrentViewFromMenu(client), HallowCameraController.savedPointCount() > 0, 0xFF55B6C7),
+            actionEntry("Clear saved points here", () -> HallowCameraController.clearCurrentDimensionPointsFromMenu(client), HallowCameraController.savedPointCount() > 0, 0xFFC96C6C),
+            actionEntry("Cycle saved views", () -> HallowCameraController.cycleSavedViewFromMenu(client), HallowCameraController.isFixedViewActive(), 0xFF7E95E8),
+            actionEntry("Browse players [" + onOff(HallowCameraController.isPlayerBrowseActive()) + "]", () -> HallowCameraController.togglePlayerBrowseFromMenu(client), HallowCameraController.isPlayerBrowseActive(), 0xFF55B6C7),
+            actionEntry(lockTargetLabel(client), () -> HallowCameraController.toggleLockCurrentTargetFromMenu(client), HallowCameraController.isLockedTargetActive(), 0xFF55B6C7),
+            actionEntry(followTargetLabel(client), () -> HallowCameraController.toggleFollowCurrentTargetFromMenu(client), HallowCameraController.isFollowTargetActive(), 0xFF55B6C7)
+        )));
+        sections.add(new HallowHudRenderer.Section("Protection", 0xFFC96C6C, List.of(
+            protectionEntry(client, "Invulnerable", protection -> protection.invulnerable, (protection, value) -> protection.invulnerable = value),
+            protectionEntry(client, "Block Fall Damage", protection -> protection.blockFallDamage, (protection, value) -> protection.blockFallDamage = value),
+            protectionEntry(client, "Block Drowning", protection -> protection.blockDrowningDamage, (protection, value) -> protection.blockDrowningDamage = value),
+            protectionEntry(client, "Block Freeze", protection -> protection.blockFreezeDamage, (protection, value) -> protection.blockFreezeDamage = value),
+            protectionEntry(client, "Block Fire", protection -> protection.blockFireDamage, (protection, value) -> protection.blockFireDamage = value),
+            protectionEntry(client, "Keep Inventory", protection -> protection.keepInventory, (protection, value) -> protection.keepInventory = value),
+            protectionEntry(client, "Block PvP", protection -> protection.blockPvpDamage, (protection, value) -> protection.blockPvpDamage = value)
+        )));
+        sections.add(new HallowHudRenderer.Section("Utility", 0xFFB9C06E, List.of(
+            actionEntry("Copy selected mainhand", () -> copySelectedTargetHand(client, false), HallowCameraController.currentLiveTarget(client) != null, 0xFFB9C06E),
+            actionEntry("Copy selected offhand", () -> copySelectedTargetHand(client, true), HallowCameraController.currentLiveTarget(client) != null, 0xFFB9C06E),
+            actionEntry("Open config screen", () -> client.setScreen(new HallowConfigScreen(client.screen)), false, 0xFF8FA0B8),
+            actionEntry("Close menu", () -> client.setScreen(null), false, 0xFF8FA0B8)
         )));
         return sections;
     }
 
-    private List<String> buildOverviewLines(Minecraft client) {
-        List<String> lines = new ArrayList<>();
-        lines.add("Enabled toggles: " + countEnabledToggles());
-        lines.add(chordHeld ? "Shortcut chord: ACTIVE" : "Shortcut chord: idle");
-
-        List<String> liveLines = new ArrayList<>();
-        for (CheatModule module : modules) {
-            liveLines.addAll(module.hudLines(client));
-        }
-        liveLines.addAll(HallowCameraController.hudLines(client));
-
-        if (minimapRenderer.isVisible()) {
-            liveLines.add("Minimap: ON");
-        }
-
-        if (liveLines.isEmpty()) {
-            lines.add("No live module data.");
-        } else {
-            lines.addAll(liveLines);
-        }
-
-        return lines;
+    private HallowHudRenderer.Entry moduleEntry(Minecraft client, CheatModule module) {
+        return actionEntry(module.legendLine(client), () -> module.trigger(client), module.isEnabled(), module.isEnabled() ? 0xFF61B887 : 0xFF5B6A80);
     }
 
-    private List<String> buildCameraLines(Minecraft client) {
-        List<String> lines = new ArrayList<>(HallowCameraController.hudLines(client));
-        if (!lines.isEmpty()) {
-            lines.add("");
-        }
-        lines.add("B save | Shift+B clear");
-        lines.add("N cycle saved views");
-        lines.add("M browse player cameras");
-        lines.add("L lock | K follow");
-        return lines;
+    private HallowHudRenderer.Entry protectionEntry(
+        Minecraft client,
+        String label,
+        Function<HallowConfig.ProtectionSettings, Boolean> getter,
+        BiConsumer<HallowConfig.ProtectionSettings, Boolean> setter
+    ) {
+        boolean enabled = getter.apply(HallowConfigManager.get().protection);
+        return actionEntry(label + " [" + onOff(enabled) + "]", () -> {
+            HallowConfig next = HallowConfigManager.get().copy();
+            boolean updated = !getter.apply(next.protection);
+            setter.accept(next.protection, updated);
+            HallowConfigManager.applyAndSave(next);
+            HallowRuntimeState.onConfigSaved(client);
+            announce(client, label + " " + (updated ? "enabled." : "disabled."));
+        }, enabled, enabled ? 0xFF7EBE73 : 0xFF7B5C5C);
     }
 
-    private List<String> buildProtectionLines() {
-        HallowConfig.ProtectionSettings protection = HallowConfigManager.get().protection;
-        return List.of(
-            "Invulnerable: " + onOff(protection.invulnerable),
-            "Fall damage: " + blocked(protection.blockFallDamage),
-            "PvP: " + blocked(protection.blockPvpDamage),
-            "Keep inventory: " + onOff(protection.keepInventory)
-        );
+    private HallowHudRenderer.Entry actionEntry(String label, Runnable action, boolean active, int accentColor) {
+        return new HallowHudRenderer.Entry(label, action, accentColorForState(accentColor, active));
     }
 
-    private HallowHudRenderer.Section moduleSection(String title, int accentColor, Minecraft client, CheatModule... sectionModules) {
-        List<String> lines = new ArrayList<>(sectionModules.length);
-        for (CheatModule module : sectionModules) {
-            lines.add(module.legendLine(client));
-        }
-        return new HallowHudRenderer.Section(title, accentColor, lines);
+    private int accentColorForState(int accentColor, boolean active) {
+        return active ? accentColor : dimAccent(accentColor);
     }
 
-    private int countEnabledToggles() {
-        int count = 0;
-        for (CheatModule module : modules) {
-            if (module.isToggleable() && module.isEnabled()) {
-                count++;
-            }
+    private int dimAccent(int accentColor) {
+        int red = (accentColor >>> 16) & 0xFF;
+        int green = (accentColor >>> 8) & 0xFF;
+        int blue = accentColor & 0xFF;
+        red = Math.max(48, (int) (red * 0.6F));
+        green = Math.max(48, (int) (green * 0.6F));
+        blue = Math.max(48, (int) (blue * 0.6F));
+        return 0xFF000000 | (red << 16) | (green << 8) | blue;
+    }
+
+    private String lockTargetLabel(Minecraft client) {
+        String targetName = HallowCameraController.currentTargetName(client);
+        if (HallowCameraController.isLockedTargetActive()) {
+            return "Unlock target [" + fallbackName(targetName) + "]";
         }
-        return count;
+        return "Lock current target [" + fallbackName(targetName) + "]";
+    }
+
+    private String followTargetLabel(Minecraft client) {
+        String targetName = HallowCameraController.currentTargetName(client);
+        if (HallowCameraController.isFollowTargetActive()) {
+            return "Stop following [" + fallbackName(targetName) + "]";
+        }
+        return "Follow current target [" + fallbackName(targetName) + "]";
+    }
+
+    private String fallbackName(String name) {
+        return name == null || name.isBlank() ? "none" : name;
     }
 
     private String onOff(boolean enabled) {
         return enabled ? "ON" : "OFF";
-    }
-
-    private String blocked(boolean enabled) {
-        return enabled ? "BLOCKED" : "LIVE";
     }
 
     private void resetModules(Minecraft client) {

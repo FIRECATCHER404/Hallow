@@ -10,6 +10,9 @@ public final class HallowHudRenderer {
     private static final int PANEL_GAP = 8;
     private static final int PANEL_PADDING = 8;
     private static final int TITLE_GAP = 6;
+    private static final int ENTRY_GAP = 5;
+    private static final int ENTRY_PADDING_X = 6;
+    private static final int ENTRY_PADDING_Y = 4;
     private static final int MIN_COLUMN_WIDTH = 118;
     private static final int MIN_TEXT_WIDTH = 72;
     private static final int MAX_COLUMNS = 5;
@@ -22,7 +25,7 @@ public final class HallowHudRenderer {
         return new LayoutResult(chooseLayout(font, sections, viewportWidth).contentHeight());
     }
 
-    public LayoutResult renderViewport(
+    public RenderResult renderViewport(
         GuiGraphics graphics,
         Font font,
         List<Section> sections,
@@ -30,14 +33,17 @@ public final class HallowHudRenderer {
         int viewportTop,
         int viewportWidth,
         int viewportHeight,
-        int scrollOffset
+        int scrollOffset,
+        int mouseX,
+        int mouseY
     ) {
         if (font == null || sections.isEmpty() || viewportWidth <= 0 || viewportHeight <= 0) {
-            return new LayoutResult(0);
+            return new RenderResult(0, List.of());
         }
 
         Layout layout = chooseLayout(font, sections, viewportWidth);
         int viewportBottom = viewportTop + viewportHeight;
+        List<ClickTarget> clickTargets = new ArrayList<>();
 
         for (PanelPlacement placement : layout.placements()) {
             int top = viewportTop + placement.y() - scrollOffset;
@@ -46,10 +52,10 @@ public final class HallowHudRenderer {
                 continue;
             }
 
-            renderPanel(graphics, font, placement.section(), viewportLeft + placement.x(), top);
+            renderPanel(graphics, font, placement.section(), viewportLeft + placement.x(), top, mouseX, mouseY, clickTargets);
         }
 
-        return new LayoutResult(layout.contentHeight());
+        return new RenderResult(layout.contentHeight(), List.copyOf(clickTargets));
     }
 
     private Layout chooseLayout(Font font, List<Section> sections, int viewportWidth) {
@@ -58,7 +64,7 @@ public final class HallowHudRenderer {
 
         for (int columns = 1; columns <= maxColumns; columns++) {
             int columnWidth = Math.max(72, (viewportWidth - ((columns - 1) * PANEL_GAP)) / columns);
-            int textWidth = Math.max(MIN_TEXT_WIDTH, columnWidth - (PANEL_PADDING * 2));
+            int textWidth = Math.max(MIN_TEXT_WIDTH, columnWidth - (PANEL_PADDING * 2) - (ENTRY_PADDING_X * 2));
             List<WrappedSection> wrappedSections = wrapSections(font, sections, textWidth, columnWidth);
             Layout candidate = distribute(columnWidth, wrappedSections, columns);
             if (best == null
@@ -97,29 +103,39 @@ public final class HallowHudRenderer {
         List<WrappedSection> wrapped = new ArrayList<>(sections.size());
         int lineStep = font.lineHeight + 2;
         for (Section section : sections) {
-            List<String> lines = new ArrayList<>();
-            for (String line : section.lines()) {
-                if (line == null || line.isBlank()) {
-                    lines.add("");
-                    continue;
+            List<WrappedEntry> entries = new ArrayList<>(section.entries().size());
+            for (Entry entry : section.entries()) {
+                List<String> lines = wrapLine(font, entry.label(), textWidth);
+                if (lines.isEmpty()) {
+                    lines = List.of("-");
                 }
 
-                lines.addAll(wrapLine(font, line, textWidth));
+                int height = (ENTRY_PADDING_Y * 2) + (lines.size() * lineStep);
+                entries.add(new WrappedEntry(entry, lines, height));
             }
 
-            if (lines.isEmpty()) {
-                lines.add("-");
+            if (entries.isEmpty()) {
+                entries.add(new WrappedEntry(new Entry("-", () -> {
+                }, 0xFF4B5A6C), List.of("-"), (ENTRY_PADDING_Y * 2) + lineStep));
             }
 
-            int height = (PANEL_PADDING * 2) + font.lineHeight + TITLE_GAP + (lines.size() * lineStep);
-            wrapped.add(new WrappedSection(section.title(), section.accentColor(), lines, columnWidth, height));
+            int entriesHeight = 0;
+            for (int index = 0; index < entries.size(); index++) {
+                entriesHeight += entries.get(index).height();
+                if (index + 1 < entries.size()) {
+                    entriesHeight += ENTRY_GAP;
+                }
+            }
+
+            int height = (PANEL_PADDING * 2) + font.lineHeight + TITLE_GAP + entriesHeight;
+            wrapped.add(new WrappedSection(section.title(), section.accentColor(), entries, columnWidth, height));
         }
         return wrapped;
     }
 
     private List<String> wrapLine(Font font, String line, int maxWidth) {
         List<String> wrapped = new ArrayList<>();
-        String remaining = line.trim();
+        String remaining = line == null ? "" : line.trim();
         while (!remaining.isEmpty()) {
             if (font.width(remaining) <= maxWidth) {
                 wrapped.add(remaining);
@@ -151,7 +167,16 @@ public final class HallowHudRenderer {
         return wrapped;
     }
 
-    private void renderPanel(GuiGraphics graphics, Font font, WrappedSection section, int left, int top) {
+    private void renderPanel(
+        GuiGraphics graphics,
+        Font font,
+        WrappedSection section,
+        int left,
+        int top,
+        int mouseX,
+        int mouseY,
+        List<ClickTarget> clickTargets
+    ) {
         int right = left + section.width();
         int bottom = top + section.height();
         int lineStep = font.lineHeight + 2;
@@ -164,12 +189,27 @@ public final class HallowHudRenderer {
         int titleY = top + PANEL_PADDING;
         graphics.drawString(font, section.title(), left + PANEL_PADDING, titleY, 0xFFF4E5BF, true);
 
+        int entryLeft = left + PANEL_PADDING;
+        int entryRight = right - PANEL_PADDING;
         int y = titleY + font.lineHeight + TITLE_GAP;
-        for (String line : section.lines()) {
-            if (!line.isEmpty()) {
-                graphics.drawString(font, line, left + PANEL_PADDING, y, 0xFFFFFFFF, false);
+
+        for (WrappedEntry entry : section.entries()) {
+            int entryBottom = y + entry.height();
+            boolean hovered = mouseX >= entryLeft && mouseX <= entryRight && mouseY >= y && mouseY <= entryBottom;
+            int background = hovered ? 0xCC263344 : 0x96202A36;
+
+            graphics.fill(entryLeft, y, entryRight, entryBottom, background);
+            graphics.fill(entryLeft, y, entryLeft + 2, entryBottom, entry.entry().accentColor());
+            graphics.fill(entryLeft + 3, y, entryRight, y + 1, 0x552D3745);
+
+            int lineY = y + ENTRY_PADDING_Y;
+            for (String line : entry.lines()) {
+                graphics.drawString(font, line, entryLeft + ENTRY_PADDING_X, lineY, 0xFFFFFFFF, false);
+                lineY += lineStep;
             }
-            y += lineStep;
+
+            clickTargets.add(new ClickTarget(entryLeft, y, entryRight, entryBottom, entry.entry().action()));
+            y = entryBottom + ENTRY_GAP;
         }
     }
 
@@ -185,16 +225,31 @@ public final class HallowHudRenderer {
         return bestIndex;
     }
 
-    public record Section(String title, int accentColor, List<String> lines) {
+    public record Entry(String label, Runnable action, int accentColor) {
+    }
+
+    public record Section(String title, int accentColor, List<Entry> entries) {
         public Section {
-            lines = List.copyOf(lines);
+            entries = List.copyOf(entries);
         }
     }
 
     public record LayoutResult(int contentHeight) {
     }
 
-    private record WrappedSection(String title, int accentColor, List<String> lines, int width, int height) {
+    public record RenderResult(int contentHeight, List<ClickTarget> clickTargets) {
+    }
+
+    public record ClickTarget(int left, int top, int right, int bottom, Runnable action) {
+        public boolean contains(double x, double y) {
+            return x >= left && x <= right && y >= top && y <= bottom;
+        }
+    }
+
+    private record WrappedEntry(Entry entry, List<String> lines, int height) {
+    }
+
+    private record WrappedSection(String title, int accentColor, List<WrappedEntry> entries, int width, int height) {
     }
 
     private record PanelPlacement(WrappedSection section, int x, int y) {
