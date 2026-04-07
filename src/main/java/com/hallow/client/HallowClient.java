@@ -31,6 +31,7 @@ import com.hallow.client.config.HallowConfig;
 import com.hallow.client.config.HallowConfigManager;
 import com.hallow.client.config.HallowProfileState;
 import com.hallow.client.config.HallowStorage;
+import com.hallow.client.screen.HallowDeckScreen;
 import com.hallow.network.HallowNetworking;
 
 import net.fabricmc.api.ClientModInitializer;
@@ -60,7 +61,6 @@ public final class HallowClient implements ClientModInitializer {
 
     private final List<CheatModule> modules = new ArrayList<>();
     private final Set<Integer> shortcutPressedKeys = new HashSet<>();
-    private final HallowHudRenderer hudRenderer = new HallowHudRenderer();
 
     private FullbrightModule fullbrightModule;
     private FlightModule flightModule;
@@ -84,7 +84,6 @@ public final class HallowClient implements ClientModInitializer {
     private HallowMinimapRenderer minimapRenderer;
     private boolean defaultsApplied;
     private boolean chordHeld;
-    private boolean hudVisible = true;
     private boolean hudTogglePressed;
     private boolean creativeShortcutPressed;
     private boolean minimapTogglePressed;
@@ -255,7 +254,12 @@ public final class HallowClient implements ClientModInitializer {
     }
 
     private void handleHudToggle(Minecraft client) {
-        if (client.player == null || client.getWindow() == null || client.screen != null) {
+        if (client.player == null || client.getWindow() == null) {
+            hudTogglePressed = false;
+            return;
+        }
+
+        if (client.screen != null && !(client.screen instanceof HallowDeckScreen)) {
             hudTogglePressed = false;
             return;
         }
@@ -271,9 +275,18 @@ public final class HallowClient implements ClientModInitializer {
         }
 
         hudTogglePressed = true;
-        hudVisible = !hudVisible;
-        HallowStorage.markDirty();
-        announce(client, hudVisible ? "HUD shown." : "HUD hidden.");
+        if (client.screen instanceof HallowDeckScreen) {
+            client.setScreen(null);
+            return;
+        }
+
+        KeyMapping.releaseAll();
+        shortcutPressedKeys.clear();
+        creativeShortcutPressed = false;
+        minimapTogglePressed = false;
+        targetMainhandPressed = false;
+        targetOffhandPressed = false;
+        client.setScreen(new HallowDeckScreen(this));
     }
 
     private void handleTargetCopyShortcuts(Minecraft client) {
@@ -305,18 +318,15 @@ public final class HallowClient implements ClientModInitializer {
 
     private void renderHud(GuiGraphics graphics, DeltaTracker tickCounter) {
         Minecraft client = Minecraft.getInstance();
-        if (hudVisible) {
-            HallowConfig config = HallowConfigManager.get();
-            hudRenderer.render(graphics, client, config.hud.left, config.hud.top, buildHudSections(client));
-            renderSelectedPlayerOverlay(graphics, client);
+        if (client.screen instanceof HallowDeckScreen) {
+            return;
         }
 
-        if (hudVisible) {
-            minimapRenderer.render(graphics, client);
-        }
+        renderSelectedPlayerOverlay(graphics, client);
+        minimapRenderer.render(graphics, client);
     }
 
-    private List<HallowHudRenderer.Section> buildHudSections(Minecraft client) {
+    public List<HallowHudRenderer.Section> buildHudSections(Minecraft client) {
         List<HallowHudRenderer.Section> sections = new ArrayList<>();
         sections.add(new HallowHudRenderer.Section("Overview", 0xFFCA9746, buildOverviewLines(client)));
         sections.add(moduleSection("Vision", 0xFF7EA7DA, client, fullbrightModule, xRayModule, noRenderModule, playerEspModule));
@@ -327,7 +337,7 @@ public final class HallowClient implements ClientModInitializer {
         sections.add(new HallowHudRenderer.Section("Protection", 0xFFC96C6C, buildProtectionLines()));
         sections.add(new HallowHudRenderer.Section("Controls", 0xFFB9C06E, List.of(
             "Hold F6 for cheat shortcuts.",
-            "F7 toggles this HUD.",
+            "F7 opens or closes this menu.",
             ", toggles the minimap.",
             "V opens HallowInv.",
             "H/J copy the selected target's hands."
@@ -410,7 +420,6 @@ public final class HallowClient implements ClientModInitializer {
     private void resetModules(Minecraft client) {
         defaultsApplied = false;
         chordHeld = false;
-        hudVisible = HallowConfigManager.get().hud.startVisible;
         hudTogglePressed = false;
         creativeShortcutPressed = false;
         minimapTogglePressed = false;
@@ -457,7 +466,6 @@ public final class HallowClient implements ClientModInitializer {
         creativeAccessModule.restoreEnabledState(client, moduleEnabled(state, creativeAccessModule.name(), config.creativeAccess.autoEnable));
         applyModuleState(client, noRenderModule, state, config.noRender.autoEnable);
 
-        hudVisible = state.loadedFromDisk ? state.hudVisible : config.hud.startVisible;
         minimapRenderer.setVisible(state.loadedFromDisk ? state.minimapVisible : config.minimap.startEnabled);
         HallowCameraController.loadSavedPoints(state.savedCameras.stream()
             .map(camera -> new HallowCameraController.CameraPoint(camera.dimension, new net.minecraft.world.phys.Vec3(camera.x, camera.y, camera.z), camera.yaw, camera.pitch))
@@ -489,7 +497,6 @@ public final class HallowClient implements ClientModInitializer {
                 state.enabledModules.put(module.name(), module.isEnabled());
             }
         }
-        state.hudVisible = hudVisible;
         state.minimapVisible = minimapRenderer.isVisible();
         state.savedCameras = HallowCameraController.exportSavedPoints().stream().map(point -> {
             HallowProfileState.SavedCamera saved = new HallowProfileState.SavedCamera();

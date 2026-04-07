@@ -3,50 +3,67 @@ package com.hallow.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 
 public final class HallowHudRenderer {
-    private static final int SCREEN_MARGIN = 8;
     private static final int PANEL_GAP = 8;
     private static final int PANEL_PADDING = 8;
     private static final int TITLE_GAP = 6;
-    private static final int MIN_COLUMN_WIDTH = 148;
-    private static final int MIN_TEXT_WIDTH = 96;
-    private static final int MAX_COLUMNS = 4;
+    private static final int MIN_COLUMN_WIDTH = 118;
+    private static final int MIN_TEXT_WIDTH = 72;
+    private static final int MAX_COLUMNS = 5;
 
-    public void render(GuiGraphics graphics, Minecraft client, int anchorLeft, int anchorTop, List<Section> sections) {
-        if (client == null || client.font == null || sections.isEmpty()) {
-            return;
+    public LayoutResult measure(Font font, List<Section> sections, int viewportWidth) {
+        if (font == null || sections.isEmpty() || viewportWidth <= 0) {
+            return new LayoutResult(0);
         }
 
-        int screenWidth = client.getWindow().getGuiScaledWidth();
-        int screenHeight = client.getWindow().getGuiScaledHeight();
-        int left = clamp(anchorLeft, SCREEN_MARGIN, Math.max(SCREEN_MARGIN, screenWidth - MIN_COLUMN_WIDTH - SCREEN_MARGIN));
-        int top = clamp(anchorTop, SCREEN_MARGIN, Math.max(SCREEN_MARGIN, screenHeight - 80));
-        int availableWidth = Math.max(MIN_COLUMN_WIDTH, screenWidth - left - SCREEN_MARGIN);
-        int availableHeight = Math.max(84, screenHeight - top - SCREEN_MARGIN);
-
-        Layout layout = chooseLayout(client.font, sections, left, top, availableWidth, availableHeight);
-        for (PanelPlacement placement : layout.placements()) {
-            renderPanel(graphics, client.font, placement);
-        }
+        return new LayoutResult(chooseLayout(font, sections, viewportWidth).contentHeight());
     }
 
-    private Layout chooseLayout(Font font, List<Section> sections, int left, int top, int availableWidth, int availableHeight) {
-        int maxColumns = Math.max(1, Math.min(MAX_COLUMNS, (availableWidth + PANEL_GAP) / (MIN_COLUMN_WIDTH + PANEL_GAP)));
+    public LayoutResult renderViewport(
+        GuiGraphics graphics,
+        Font font,
+        List<Section> sections,
+        int viewportLeft,
+        int viewportTop,
+        int viewportWidth,
+        int viewportHeight,
+        int scrollOffset
+    ) {
+        if (font == null || sections.isEmpty() || viewportWidth <= 0 || viewportHeight <= 0) {
+            return new LayoutResult(0);
+        }
+
+        Layout layout = chooseLayout(font, sections, viewportWidth);
+        int viewportBottom = viewportTop + viewportHeight;
+
+        for (PanelPlacement placement : layout.placements()) {
+            int top = viewportTop + placement.y() - scrollOffset;
+            int bottom = top + placement.section().height();
+            if (bottom < viewportTop || top > viewportBottom) {
+                continue;
+            }
+
+            renderPanel(graphics, font, placement.section(), viewportLeft + placement.x(), top);
+        }
+
+        return new LayoutResult(layout.contentHeight());
+    }
+
+    private Layout chooseLayout(Font font, List<Section> sections, int viewportWidth) {
+        int maxColumns = Math.max(1, Math.min(MAX_COLUMNS, Math.max(1, (viewportWidth + PANEL_GAP) / (MIN_COLUMN_WIDTH + PANEL_GAP))));
         Layout best = null;
 
         for (int columns = 1; columns <= maxColumns; columns++) {
-            int columnWidth = Math.max(MIN_COLUMN_WIDTH, (availableWidth - ((columns - 1) * PANEL_GAP)) / columns);
+            int columnWidth = Math.max(72, (viewportWidth - ((columns - 1) * PANEL_GAP)) / columns);
             int textWidth = Math.max(MIN_TEXT_WIDTH, columnWidth - (PANEL_PADDING * 2));
             List<WrappedSection> wrappedSections = wrapSections(font, sections, textWidth, columnWidth);
-            Layout candidate = distribute(left, top, availableHeight, columnWidth, wrappedSections, columns);
+            Layout candidate = distribute(columnWidth, wrappedSections, columns);
             if (best == null
-                || candidate.overflow() < best.overflow()
-                || (candidate.overflow() == best.overflow() && candidate.maxColumnHeight() < best.maxColumnHeight())
-                || (candidate.overflow() == best.overflow() && candidate.maxColumnHeight() == best.maxColumnHeight() && candidate.columns() > best.columns())) {
+                || candidate.contentHeight() < best.contentHeight()
+                || (candidate.contentHeight() == best.contentHeight() && candidate.columns() > best.columns())) {
                 best = candidate;
             }
         }
@@ -54,27 +71,26 @@ public final class HallowHudRenderer {
         return best;
     }
 
-    private Layout distribute(int left, int top, int availableHeight, int columnWidth, List<WrappedSection> wrappedSections, int columns) {
+    private Layout distribute(int columnWidth, List<WrappedSection> wrappedSections, int columns) {
         int[] columnHeights = new int[columns];
         List<PanelPlacement> placements = new ArrayList<>();
 
         for (WrappedSection section : wrappedSections) {
             int column = shortestColumn(columnHeights);
-            int x = left + (column * (columnWidth + PANEL_GAP));
-            int y = top + columnHeights[column];
+            int x = column * (columnWidth + PANEL_GAP);
+            int y = columnHeights[column];
             placements.add(new PanelPlacement(section, x, y));
             columnHeights[column] += section.height() + PANEL_GAP;
         }
 
-        int maxColumnHeight = 0;
+        int contentHeight = 0;
         for (int height : columnHeights) {
             if (height > 0) {
-                maxColumnHeight = Math.max(maxColumnHeight, height - PANEL_GAP);
+                contentHeight = Math.max(contentHeight, height - PANEL_GAP);
             }
         }
 
-        int overflow = Math.max(0, maxColumnHeight - availableHeight);
-        return new Layout(placements, overflow, maxColumnHeight, columns);
+        return new Layout(placements, contentHeight, columns);
     }
 
     private List<WrappedSection> wrapSections(Font font, List<Section> sections, int textWidth, int columnWidth) {
@@ -135,10 +151,7 @@ public final class HallowHudRenderer {
         return wrapped;
     }
 
-    private void renderPanel(GuiGraphics graphics, Font font, PanelPlacement placement) {
-        WrappedSection section = placement.section();
-        int left = placement.x();
-        int top = placement.y();
+    private void renderPanel(GuiGraphics graphics, Font font, WrappedSection section, int left, int top) {
         int right = left + section.width();
         int bottom = top + section.height();
         int lineStep = font.lineHeight + 2;
@@ -172,14 +185,13 @@ public final class HallowHudRenderer {
         return bestIndex;
     }
 
-    private static int clamp(int value, int min, int max) {
-        return Math.max(min, Math.min(max, value));
-    }
-
     public record Section(String title, int accentColor, List<String> lines) {
         public Section {
             lines = List.copyOf(lines);
         }
+    }
+
+    public record LayoutResult(int contentHeight) {
     }
 
     private record WrappedSection(String title, int accentColor, List<String> lines, int width, int height) {
@@ -188,6 +200,6 @@ public final class HallowHudRenderer {
     private record PanelPlacement(WrappedSection section, int x, int y) {
     }
 
-    private record Layout(List<PanelPlacement> placements, int overflow, int maxColumnHeight, int columns) {
+    private record Layout(List<PanelPlacement> placements, int contentHeight, int columns) {
     }
 }

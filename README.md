@@ -2,7 +2,7 @@
 
 `Hallow` is a client-side Fabric cheat mod for Minecraft `1.21.11`.
 
-This is a full cheat client mod with vision, movement, awareness, camera, inventory, and protection features, plus a toggleable HUD deck built around quick in-game controls.
+This is a full cheat client mod with vision, movement, awareness, camera, inventory, and protection features, plus an `F7` menu screen built around quick in-game controls.
 
 ## Current Feature Set
 
@@ -34,7 +34,7 @@ This is a full cheat client mod with vision, movement, awareness, camera, invent
 
 ### Camera / Utility
 
-- Wrapped multi-section HUD deck with `F7` show/hide
+- Wrapped multi-section `F7` menu screen
 - Saved camera points
 - Player camera browse / lock / follow
 - Live target hand copy
@@ -53,7 +53,7 @@ This is a full cheat client mod with vision, movement, awareness, camera, invent
 
 ### Cheat Toggles
 
-Hold `F6` and press. `F6` is shortcut-only now and does not expand the HUD:
+Hold `F6` and press. `F6` is shortcut-only now and does not open the menu:
 
 - `1`: `Fullbright`
 - `2`: `Fly`
@@ -77,7 +77,7 @@ Hold `F6` and press. `F6` is shortcut-only now and does not expand the HUD:
 
 ### Other Shortcuts
 
-- `F7`: toggle the Hallow HUD deck
+- `F7`: open or close the Hallow menu
 - `V`: open `HallowInv`
 - `,`: toggle minimap
 
@@ -111,7 +111,7 @@ That includes enabled module state, saved camera points, minimap visibility, and
 
 - Most features are client-side cheats. Some inventory and protection behavior has better sync in singleplayer or on Hallow-enabled servers.
 - Holding `F6` captures keyboard and mouse input so the shortcut layer can use arbitrary keys without triggering normal controls.
-- The HUD deck wraps into multiple sections and stays bounded to the screen instead of expanding into one long stack.
+- The `F7` menu is a real screen, so it releases the mouse, blocks player controls while open, and keeps its wrapped sections inside the viewport with scrolling when needed.
 - `HallowInv` supports live client inventory editing, with extra sync support where the matching server payload exists.
 - `Projectile Predict` renders a translucent arc with landing marker instead of a simple point trail.
 - Player camera browsing is detached from your movement entity, so you can still move while looking through another player's view.
