@@ -88,10 +88,15 @@ public final class XRayModule extends CheatModule {
             return false;
         }
 
-        status = result.changed() ? "X-Ray pack: enabling..." : "X-Ray pack: active";
+        String sourceLabel = result.sourceLabel() == null ? "pack" : result.sourceLabel();
+        status = result.changed()
+            ? "X-Ray pack: enabling " + sourceLabel + "..."
+            : "X-Ray pack: active (" + sourceLabel + ")";
         result.reloadFuture().whenComplete((ignored, error) -> {
             if (client != null) {
-                client.execute(() -> status = error == null ? "X-Ray pack: active" : "X-Ray pack: reload failed");
+                client.execute(() -> status = error == null
+                    ? "X-Ray pack: active (" + sourceLabel + ")"
+                    : "X-Ray pack: reload failed");
             }
         });
         return true;

@@ -199,10 +199,10 @@ public final class HallowConfigScreen extends Screen {
                 }).bounds(left, bottom, width, 20).build()
             );
             bottom += 30;
-            xRayResourcePackBox = addPageWidget(new EditBox(this.font, left, bottom, width, 20, Component.literal("Managed X-Ray pack source")));
+            xRayResourcePackBox = addPageWidget(new EditBox(this.font, left, bottom, width, 20, Component.literal("Custom X-Ray pack override")));
             xRayResourcePackBox.setMaxLength(2048);
             xRayResourcePackBox.setValue(workingCopy.xray.resourcePackPath);
-            xRayResourcePackBox.setHint(Component.literal("C:\\Users\\you\\Downloads\\XRAy.zip"));
+            xRayResourcePackBox.setHint(Component.literal("Optional: C:\\Users\\you\\Downloads\\XRAy.zip"));
             bottom += 30;
             addPageWidget(toggle(left, bottom, "NoRender Auto-Enable", workingCopy.noRender.autoEnable, value -> workingCopy.noRender.autoEnable = value));
             bottom += 24;
@@ -261,10 +261,10 @@ public final class HallowConfigScreen extends Screen {
             }).bounds(left + textWidth + 10, blockRowY, panelRight() - (left + textWidth + 10) - 10, 20).build()
         );
         int packRowY = blockRowY + 34;
-        xRayResourcePackBox = addPageWidget(new EditBox(this.font, left, packRowY, contentWidth(), 20, Component.literal("Managed X-Ray pack source")));
+        xRayResourcePackBox = addPageWidget(new EditBox(this.font, left, packRowY, contentWidth(), 20, Component.literal("Custom X-Ray pack override")));
         xRayResourcePackBox.setMaxLength(2048);
         xRayResourcePackBox.setValue(workingCopy.xray.resourcePackPath);
-        xRayResourcePackBox.setHint(Component.literal("C:\\Users\\you\\Downloads\\XRAy.zip"));
+        xRayResourcePackBox.setHint(Component.literal("Optional: C:\\Users\\you\\Downloads\\XRAy.zip"));
         int noRenderLeftY = packRowY + 34;
         int noRenderRightY = packRowY + 34;
 
@@ -780,7 +780,7 @@ public final class HallowConfigScreen extends Screen {
 
     private String categoryHelperText() {
         return switch (category) {
-            case VISION -> "Vision settings cover fullbright, managed X-Ray packs, ore targets, and NoRender cleanup.";
+            case VISION -> "Vision settings cover fullbright, bundled X-Ray packs, ore targets, and NoRender cleanup.";
             case TRAVERSAL -> "Traversal tunes movement assists, speed settings, and friction or collision modifiers.";
             case AWARENESS -> "Awareness controls radar range, prediction detail, and nearby tracking behavior.";
             case ACCESS_AND_HUD -> "Access/HUD handles HallowInv defaults, minimap presentation, saved cameras, and anchor persistence.";
@@ -795,16 +795,16 @@ public final class HallowConfigScreen extends Screen {
     private static String xRayPackSourceStatus(String value) {
         String normalized = normalizeText(value);
         if (normalized.isEmpty()) {
-            return "No source path configured. X-Ray will fall back to the built-in scan mode.";
+            return "No override path configured. Hallow will use the built-in X-Ray pack.";
         }
 
         try {
             Path path = Path.of(normalized);
             return Files.exists(path)
-                ? "Source pack found: " + path.getFileName()
-                : "Source pack missing: " + normalized;
+                ? "Override pack found: " + path.getFileName()
+                : "Override pack missing. Hallow will use the built-in X-Ray pack.";
         } catch (InvalidPathException ignored) {
-            return "Invalid source path: " + normalized;
+            return "Invalid override path. Hallow will use the built-in X-Ray pack.";
         }
     }
 

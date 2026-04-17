@@ -2,14 +2,14 @@
 
 `Hallow` is a client-side Fabric cheat mod for Minecraft `1.21.11`.
 
-This is a full cheat client mod with vision, movement, awareness, camera, inventory, protection, managed resource-pack features, and a redesigned clickable `F7` control deck built around quick in-game controls.
+This is a full cheat client mod with vision, movement, awareness, camera, inventory, protection, bundled resource-pack features, and a redesigned clickable `F7` control deck built around quick in-game controls.
 
 ## Current Feature Set
 
 ### Vision
 
 - `Fullbright` using the same render path as night vision
-- `X-Ray` can auto-install and toggle a managed resource pack from your configured source path, with `ESP`, `Spectator View`, and `Ore Mode` kept as fallback behavior if that pack is unavailable
+- `X-Ray` ships with a bundled managed resource pack, supports an optional override zip, and keeps `ESP`, `Spectator View`, and `Ore Mode` as fallback behavior if pack activation fails
 - `NoRender` for fog, overlays, bobbing, and damage tilt removal
 - `Player ESP` with tracers and player boxes
 
@@ -109,11 +109,9 @@ Per-world / per-server state is stored in:
 
 That includes enabled module state, saved camera points, minimap visibility, and anchor state.
 
-The default managed X-Ray pack source points at:
+Hallow now bundles `hallow_xray_pack.zip` directly inside the mod jar. When `X-Ray` is enabled, Hallow copies that built-in pack into the active game's `resourcepacks` directory and toggles it on automatically.
 
-- `~/Downloads/XRAy.zip`
-
-When `X-Ray` is enabled, Hallow copies that file into the active game's `resourcepacks` directory as `hallow_xray_pack.zip` and toggles it on. You can change the source path from the Vision page in the config screen.
+If you want to swap in a different pack, the Vision page still exposes an optional override path. When that override is blank, invalid, or missing, Hallow falls back to the built-in pack instead of depending on a file in `Downloads`.
 
 ## Notes
 

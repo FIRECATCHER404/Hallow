@@ -1,6 +1,5 @@
 package com.hallow.client.config;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -9,7 +8,7 @@ import java.util.Locale;
 import net.minecraft.resources.Identifier;
 
 public final class HallowConfig {
-    private static final String DEFAULT_XRAY_RESOURCE_PACK_PATH = Path.of(System.getProperty("user.home", "."), "Downloads", "XRAy.zip").toString();
+    private static final String DEFAULT_XRAY_RESOURCE_PACK_PATH = "";
     private static final List<String> DEFAULT_XRAY_BLOCKS = List.of(
         "minecraft:coal_ore",
         "minecraft:deepslate_coal_ore",

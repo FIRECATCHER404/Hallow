@@ -1,6 +1,7 @@
 package com.hallow.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -14,6 +15,7 @@ import net.minecraft.server.packs.repository.PackRepository;
 
 public final class HallowManagedResourcePack {
     private static final String XRAY_PACK_FILE_NAME = "hallow_xray_pack.zip";
+    private static final String BUILTIN_XRAY_PACK_RESOURCE = "/assets/hallow/builtin/" + XRAY_PACK_FILE_NAME;
 
     private HallowManagedResourcePack() {
     }
@@ -23,16 +25,22 @@ public final class HallowManagedResourcePack {
             return PackToggleResult.failure("Client is unavailable.");
         }
 
-        Path installedPack = installManagedPack(client, sourcePath, XRAY_PACK_FILE_NAME);
+        ManagedPackInstall installedPack = installManagedPack(client, sourcePath, XRAY_PACK_FILE_NAME);
         if (installedPack == null) {
-            if (sourcePath == null || sourcePath.isBlank()) {
-                return PackToggleResult.failure("X-Ray resource pack source is not configured.");
-            }
-
-            return PackToggleResult.failure("X-Ray resource pack source was not found.");
+            return PackToggleResult.failure("Managed X-Ray resource pack is not available.");
         }
 
-        return togglePack(client, XRAY_PACK_FILE_NAME, true);
+        PackToggleResult toggleResult = togglePack(client, XRAY_PACK_FILE_NAME, true);
+        if (!toggleResult.succeeded()) {
+            return toggleResult;
+        }
+
+        return PackToggleResult.success(
+            toggleResult.packId(),
+            toggleResult.changed(),
+            toggleResult.reloadFuture(),
+            installedPack.sourceLabel()
+        );
     }
 
     public static PackToggleResult disableXRayPack(Minecraft client) {
@@ -43,31 +51,48 @@ public final class HallowManagedResourcePack {
         return togglePack(client, XRAY_PACK_FILE_NAME, false);
     }
 
-    private static Path installManagedPack(Minecraft client, String sourcePath, String managedFileName) {
+    private static ManagedPackInstall installManagedPack(Minecraft client, String sourcePath, String managedFileName) {
         Path target = client.getResourcePackDirectory().resolve(managedFileName);
-        if (sourcePath == null || sourcePath.isBlank()) {
-            return Files.exists(target) ? target : null;
-        }
-
-        Path source;
-        try {
-            source = Path.of(sourcePath.trim());
-        } catch (InvalidPathException ignored) {
-            return Files.exists(target) ? target : null;
-        }
-
-        if (!Files.exists(source)) {
-            return Files.exists(target) ? target : null;
-        }
-
         try {
             Files.createDirectories(target.getParent());
-            if (shouldCopy(source, target)) {
-                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-            return target;
         } catch (IOException ignored) {
-            return Files.exists(target) ? target : null;
+            return Files.exists(target) ? new ManagedPackInstall(target, "cached") : null;
+        }
+
+        Path source = resolveSourcePath(sourcePath);
+        if (source != null) {
+            try {
+                if (shouldCopy(source, target)) {
+                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+                }
+                return new ManagedPackInstall(target, source.getFileName().toString());
+            } catch (IOException ignored) {
+                return Files.exists(target) ? new ManagedPackInstall(target, "cached") : null;
+            }
+        }
+
+        try (InputStream stream = HallowManagedResourcePack.class.getResourceAsStream(BUILTIN_XRAY_PACK_RESOURCE)) {
+            if (stream == null) {
+                return Files.exists(target) ? new ManagedPackInstall(target, "cached") : null;
+            }
+
+            Files.copy(stream, target, StandardCopyOption.REPLACE_EXISTING);
+            return new ManagedPackInstall(target, "built-in");
+        } catch (IOException ignored) {
+            return Files.exists(target) ? new ManagedPackInstall(target, "cached") : null;
+        }
+    }
+
+    private static Path resolveSourcePath(String sourcePath) {
+        if (sourcePath == null || sourcePath.isBlank()) {
+            return null;
+        }
+
+        try {
+            Path source = Path.of(sourcePath.trim());
+            return Files.exists(source) ? source : null;
+        } catch (InvalidPathException ignored) {
+            return null;
         }
     }
 
@@ -152,13 +177,20 @@ public final class HallowManagedResourcePack {
             || id.endsWith("\\" + managedFileName));
     }
 
-    public record PackToggleResult(String packId, boolean changed, CompletableFuture<?> reloadFuture, String error) {
+    private record ManagedPackInstall(Path target, String sourceLabel) {
+    }
+
+    public record PackToggleResult(String packId, boolean changed, CompletableFuture<?> reloadFuture, String error, String sourceLabel) {
         public static PackToggleResult success(String packId, boolean changed, CompletableFuture<?> reloadFuture) {
-            return new PackToggleResult(packId, changed, reloadFuture, null);
+            return new PackToggleResult(packId, changed, reloadFuture, null, null);
+        }
+
+        public static PackToggleResult success(String packId, boolean changed, CompletableFuture<?> reloadFuture, String sourceLabel) {
+            return new PackToggleResult(packId, changed, reloadFuture, null, sourceLabel);
         }
 
         public static PackToggleResult failure(String error) {
-            return new PackToggleResult(null, false, CompletableFuture.completedFuture(null), error);
+            return new PackToggleResult(null, false, CompletableFuture.completedFuture(null), error, null);
         }
 
         public boolean succeeded() {
