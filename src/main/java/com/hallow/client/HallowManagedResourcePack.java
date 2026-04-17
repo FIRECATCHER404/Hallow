@@ -3,7 +3,6 @@ package com.hallow.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -20,12 +19,12 @@ public final class HallowManagedResourcePack {
     private HallowManagedResourcePack() {
     }
 
-    public static PackToggleResult enableXRayPack(Minecraft client, String sourcePath) {
+    public static PackToggleResult enableXRayPack(Minecraft client) {
         if (client == null) {
             return PackToggleResult.failure("Client is unavailable.");
         }
 
-        ManagedPackInstall installedPack = installManagedPack(client, sourcePath, XRAY_PACK_FILE_NAME);
+        ManagedPackInstall installedPack = installManagedPack(client, XRAY_PACK_FILE_NAME);
         if (installedPack == null) {
             return PackToggleResult.failure("Managed X-Ray resource pack is not available.");
         }
@@ -51,24 +50,12 @@ public final class HallowManagedResourcePack {
         return togglePack(client, XRAY_PACK_FILE_NAME, false);
     }
 
-    private static ManagedPackInstall installManagedPack(Minecraft client, String sourcePath, String managedFileName) {
+    private static ManagedPackInstall installManagedPack(Minecraft client, String managedFileName) {
         Path target = client.getResourcePackDirectory().resolve(managedFileName);
         try {
             Files.createDirectories(target.getParent());
         } catch (IOException ignored) {
             return Files.exists(target) ? new ManagedPackInstall(target, "cached") : null;
-        }
-
-        Path source = resolveSourcePath(sourcePath);
-        if (source != null) {
-            try {
-                if (shouldCopy(source, target)) {
-                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-                }
-                return new ManagedPackInstall(target, source.getFileName().toString());
-            } catch (IOException ignored) {
-                return Files.exists(target) ? new ManagedPackInstall(target, "cached") : null;
-            }
         }
 
         try (InputStream stream = HallowManagedResourcePack.class.getResourceAsStream(BUILTIN_XRAY_PACK_RESOURCE)) {
@@ -81,31 +68,6 @@ public final class HallowManagedResourcePack {
         } catch (IOException ignored) {
             return Files.exists(target) ? new ManagedPackInstall(target, "cached") : null;
         }
-    }
-
-    private static Path resolveSourcePath(String sourcePath) {
-        if (sourcePath == null || sourcePath.isBlank()) {
-            return null;
-        }
-
-        try {
-            Path source = Path.of(sourcePath.trim());
-            return Files.exists(source) ? source : null;
-        } catch (InvalidPathException ignored) {
-            return null;
-        }
-    }
-
-    private static boolean shouldCopy(Path source, Path target) throws IOException {
-        if (!Files.exists(target)) {
-            return true;
-        }
-
-        if (Files.size(source) != Files.size(target)) {
-            return true;
-        }
-
-        return Files.getLastModifiedTime(source).compareTo(Files.getLastModifiedTime(target)) > 0;
     }
 
     private static PackToggleResult togglePack(Minecraft client, String managedFileName, boolean enabled) {

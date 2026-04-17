@@ -79,10 +79,7 @@ public final class XRayModule extends CheatModule {
     }
 
     private boolean activateManagedPack(Minecraft client) {
-        HallowManagedResourcePack.PackToggleResult result = HallowManagedResourcePack.enableXRayPack(
-            client,
-            HallowConfigManager.get().xray.resourcePackPath
-        );
+        HallowManagedResourcePack.PackToggleResult result = HallowManagedResourcePack.enableXRayPack(client);
         if (!result.succeeded()) {
             status = "X-Ray pack unavailable | fallback " + HallowConfigManager.get().xray.mode.label();
             return false;
