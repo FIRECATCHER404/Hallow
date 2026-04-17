@@ -7,15 +7,17 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 
 public final class HallowHudRenderer {
-    private static final int PANEL_GAP = 8;
-    private static final int PANEL_PADDING = 8;
-    private static final int TITLE_GAP = 6;
-    private static final int ENTRY_GAP = 5;
-    private static final int ENTRY_PADDING_X = 6;
-    private static final int ENTRY_PADDING_Y = 4;
-    private static final int MIN_COLUMN_WIDTH = 118;
-    private static final int MIN_TEXT_WIDTH = 72;
-    private static final int MAX_COLUMNS = 5;
+    private static final int PANEL_GAP = 12;
+    private static final int PANEL_PADDING = 10;
+    private static final int HEADER_GAP = 8;
+    private static final int TITLE_GAP = 4;
+    private static final int ENTRY_GAP = 8;
+    private static final int ENTRY_PADDING_X = 8;
+    private static final int ENTRY_PADDING_Y = 6;
+    private static final int MIN_COLUMN_WIDTH = 156;
+    private static final int MIN_TEXT_WIDTH = 92;
+    private static final int BADGE_RESERVE = 56;
+    private static final int MAX_COLUMNS = 4;
 
     public LayoutResult measure(Font font, List<Section> sections, int viewportWidth) {
         if (font == null || sections.isEmpty() || viewportWidth <= 0) {
@@ -63,8 +65,8 @@ public final class HallowHudRenderer {
         Layout best = null;
 
         for (int columns = 1; columns <= maxColumns; columns++) {
-            int columnWidth = Math.max(72, (viewportWidth - ((columns - 1) * PANEL_GAP)) / columns);
-            int textWidth = Math.max(MIN_TEXT_WIDTH, columnWidth - (PANEL_PADDING * 2) - (ENTRY_PADDING_X * 2));
+            int columnWidth = Math.max(92, (viewportWidth - ((columns - 1) * PANEL_GAP)) / columns);
+            int textWidth = Math.max(MIN_TEXT_WIDTH, columnWidth - (PANEL_PADDING * 2) - (ENTRY_PADDING_X * 2) - BADGE_RESERVE);
             List<WrappedSection> wrappedSections = wrapSections(font, sections, textWidth, columnWidth);
             Layout candidate = distribute(columnWidth, wrappedSections, columns);
             if (best == null
@@ -101,22 +103,34 @@ public final class HallowHudRenderer {
 
     private List<WrappedSection> wrapSections(Font font, List<Section> sections, int textWidth, int columnWidth) {
         List<WrappedSection> wrapped = new ArrayList<>(sections.size());
-        int lineStep = font.lineHeight + 2;
+        int titleLineStep = font.lineHeight + 2;
+        int detailLineStep = font.lineHeight + 1;
+
         for (Section section : sections) {
+            List<String> subtitleLines = wrapLine(font, section.subtitle(), columnWidth - (PANEL_PADDING * 2));
             List<WrappedEntry> entries = new ArrayList<>(section.entries().size());
             for (Entry entry : section.entries()) {
-                List<String> lines = wrapLine(font, entry.label(), textWidth);
-                if (lines.isEmpty()) {
-                    lines = List.of("-");
+                List<String> titleLines = wrapLine(font, entry.label(), textWidth);
+                if (titleLines.isEmpty()) {
+                    titleLines = List.of("-");
                 }
 
-                int height = (ENTRY_PADDING_Y * 2) + (lines.size() * lineStep);
-                entries.add(new WrappedEntry(entry, lines, height));
+                List<String> detailLines = wrapLine(font, entry.detail(), textWidth);
+                int height = (ENTRY_PADDING_Y * 2) + (titleLines.size() * titleLineStep);
+                if (!detailLines.isEmpty()) {
+                    height += 3 + (detailLines.size() * detailLineStep);
+                }
+                entries.add(new WrappedEntry(entry, titleLines, detailLines, height));
             }
 
             if (entries.isEmpty()) {
-                entries.add(new WrappedEntry(new Entry("-", () -> {
-                }, 0xFF4B5A6C), List.of("-"), (ENTRY_PADDING_Y * 2) + lineStep));
+                entries.add(new WrappedEntry(new Entry("-", "", "", () -> {
+                }, 0xFF4B5A6C, false), List.of("-"), List.of(), (ENTRY_PADDING_Y * 2) + titleLineStep));
+            }
+
+            int headerHeight = font.lineHeight;
+            if (!subtitleLines.isEmpty()) {
+                headerHeight += TITLE_GAP + (subtitleLines.size() * detailLineStep);
             }
 
             int entriesHeight = 0;
@@ -127,15 +141,19 @@ public final class HallowHudRenderer {
                 }
             }
 
-            int height = (PANEL_PADDING * 2) + font.lineHeight + TITLE_GAP + entriesHeight;
-            wrapped.add(new WrappedSection(section.title(), section.accentColor(), entries, columnWidth, height));
+            int height = (PANEL_PADDING * 2) + headerHeight + HEADER_GAP + entriesHeight;
+            wrapped.add(new WrappedSection(section.title(), subtitleLines, section.accentColor(), entries, columnWidth, height));
         }
         return wrapped;
     }
 
     private List<String> wrapLine(Font font, String line, int maxWidth) {
+        if (line == null || line.isBlank()) {
+            return List.of();
+        }
+
         List<String> wrapped = new ArrayList<>();
-        String remaining = line == null ? "" : line.trim();
+        String remaining = line.trim();
         while (!remaining.isEmpty()) {
             if (font.width(remaining) <= maxWidth) {
                 wrapped.add(remaining);
@@ -179,38 +197,74 @@ public final class HallowHudRenderer {
     ) {
         int right = left + section.width();
         int bottom = top + section.height();
-        int lineStep = font.lineHeight + 2;
+        int titleLineStep = font.lineHeight + 2;
+        int detailLineStep = font.lineHeight + 1;
 
-        graphics.fill(left - 2, top - 2, right + 2, bottom + 2, 0x44000000);
-        graphics.fill(left, top, right, bottom, 0xD0121822);
+        graphics.fill(left - 3, top - 3, right + 3, bottom + 3, 0x33000000);
+        graphics.fill(left, top, right, bottom, 0xDD111822);
         graphics.fill(left, top, right, top + 3, section.accentColor());
-        graphics.fill(left + 1, top + 4, right - 1, bottom - 1, 0x941A2330);
+        graphics.fill(left + 1, top + 4, right - 1, bottom - 1, 0xA718202B);
+        graphics.fill(left + 1, top + 1, right - 1, top + 16, 0x222C3A4A);
 
         int titleY = top + PANEL_PADDING;
-        graphics.drawString(font, section.title(), left + PANEL_PADDING, titleY, 0xFFF4E5BF, true);
+        graphics.drawString(font, section.title(), left + PANEL_PADDING, titleY, 0xFFF8E8C0, true);
+        drawBadge(graphics, font, Integer.toString(section.entries().size()), right - PANEL_PADDING, titleY - 2, section.accentColor(), 0xFF0F141B, false);
+
+        int y = titleY + font.lineHeight;
+        for (String subtitleLine : section.subtitleLines()) {
+            y += TITLE_GAP;
+            graphics.drawString(font, subtitleLine, left + PANEL_PADDING, y, 0xFF92A3B8, false);
+            y += detailLineStep - TITLE_GAP;
+        }
+        y += HEADER_GAP;
 
         int entryLeft = left + PANEL_PADDING;
         int entryRight = right - PANEL_PADDING;
-        int y = titleY + font.lineHeight + TITLE_GAP;
 
         for (WrappedEntry entry : section.entries()) {
             int entryBottom = y + entry.height();
             boolean hovered = mouseX >= entryLeft && mouseX <= entryRight && mouseY >= y && mouseY <= entryBottom;
-            int background = hovered ? 0xCC263344 : 0x96202A36;
+            int background = entry.entry().active()
+                ? (hovered ? 0xCC253A4B : 0xB8213141)
+                : (hovered ? 0xCC222D3A : 0xA619222D);
 
             graphics.fill(entryLeft, y, entryRight, entryBottom, background);
-            graphics.fill(entryLeft, y, entryLeft + 2, entryBottom, entry.entry().accentColor());
-            graphics.fill(entryLeft + 3, y, entryRight, y + 1, 0x552D3745);
+            graphics.fill(entryLeft, y, entryLeft + 3, entryBottom, entry.entry().accentColor());
+            graphics.fill(entryLeft + 4, y, entryRight, y + 1, 0x443A4755);
 
-            int lineY = y + ENTRY_PADDING_Y;
-            for (String line : entry.lines()) {
-                graphics.drawString(font, line, entryLeft + ENTRY_PADDING_X, lineY, 0xFFFFFFFF, false);
-                lineY += lineStep;
+            int textLeft = entryLeft + ENTRY_PADDING_X;
+            int textTop = y + ENTRY_PADDING_Y;
+            for (String titleLine : entry.titleLines()) {
+                graphics.drawString(font, titleLine, textLeft, textTop, 0xFFFFFFFF, false);
+                textTop += titleLineStep;
+            }
+
+            if (!entry.detailLines().isEmpty()) {
+                textTop += 1;
+                for (String detailLine : entry.detailLines()) {
+                    graphics.drawString(font, detailLine, textLeft, textTop, 0xFF9AA9BB, false);
+                    textTop += detailLineStep;
+                }
+            }
+
+            if (!entry.entry().badge().isBlank()) {
+                int badgeColor = entry.entry().active() ? entry.entry().accentColor() : dimAccent(entry.entry().accentColor());
+                drawBadge(graphics, font, entry.entry().badge(), entryRight - ENTRY_PADDING_X, y + ENTRY_PADDING_Y - 1, badgeColor, 0xFF0F141B, hovered);
             }
 
             clickTargets.add(new ClickTarget(entryLeft, y, entryRight, entryBottom, entry.entry().action()));
             y = entryBottom + ENTRY_GAP;
         }
+    }
+
+    private void drawBadge(GuiGraphics graphics, Font font, String text, int right, int top, int accentColor, int textColor, boolean hovered) {
+        int width = font.width(text) + 12;
+        int left = right - width;
+        int bottom = top + 12;
+        int background = hovered ? brighten(accentColor, 1.15F) : accentColor;
+        graphics.fill(left, top, right, bottom, background);
+        graphics.fill(left + 1, top + 1, right - 1, bottom - 1, 0xCC10161E);
+        graphics.drawCenteredString(font, text, left + (width / 2), top + 2, textColor);
     }
 
     private static int shortestColumn(int[] heights) {
@@ -225,12 +279,39 @@ public final class HallowHudRenderer {
         return bestIndex;
     }
 
-    public record Entry(String label, Runnable action, int accentColor) {
+    private static int dimAccent(int accentColor) {
+        return brighten(accentColor, 0.72F);
     }
 
-    public record Section(String title, int accentColor, List<Entry> entries) {
+    private static int brighten(int color, float factor) {
+        int alpha = color >>> 24;
+        int red = Math.max(36, Math.min(255, (int) (((color >>> 16) & 0xFF) * factor)));
+        int green = Math.max(36, Math.min(255, (int) (((color >>> 8) & 0xFF) * factor)));
+        int blue = Math.max(36, Math.min(255, (int) ((color & 0xFF) * factor)));
+        return (alpha << 24) | (red << 16) | (green << 8) | blue;
+    }
+
+    public record Entry(String label, String detail, String badge, Runnable action, int accentColor, boolean active) {
+        public Entry {
+            label = label == null ? "" : label;
+            detail = detail == null ? "" : detail;
+            badge = badge == null ? "" : badge;
+        }
+
+        public Entry(String label, Runnable action, int accentColor) {
+            this(label, "", "", action, accentColor, false);
+        }
+    }
+
+    public record Section(String title, String subtitle, int accentColor, List<Entry> entries) {
         public Section {
+            title = title == null ? "" : title;
+            subtitle = subtitle == null ? "" : subtitle;
             entries = List.copyOf(entries);
+        }
+
+        public Section(String title, int accentColor, List<Entry> entries) {
+            this(title, "", accentColor, entries);
         }
     }
 
@@ -246,10 +327,10 @@ public final class HallowHudRenderer {
         }
     }
 
-    private record WrappedEntry(Entry entry, List<String> lines, int height) {
+    private record WrappedEntry(Entry entry, List<String> titleLines, List<String> detailLines, int height) {
     }
 
-    private record WrappedSection(String title, int accentColor, List<WrappedEntry> entries, int width, int height) {
+    private record WrappedSection(String title, List<String> subtitleLines, int accentColor, List<WrappedEntry> entries, int width, int height) {
     }
 
     private record PanelPlacement(WrappedSection section, int x, int y) {

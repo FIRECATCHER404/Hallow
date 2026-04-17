@@ -82,6 +82,10 @@ public abstract class CheatModule {
         return toggleable;
     }
 
+    public final String shortcutLabel() {
+        return slotKeyLabel();
+    }
+
     public final void setEnabled(Minecraft client, boolean enabled) {
         if (!toggleable || this.enabled == enabled) {
             return;

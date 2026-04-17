@@ -24,12 +24,12 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
 public final class HallowConfigScreen extends Screen {
-    private static final int BASE_PANEL_WIDTH = 408;
-    private static final int MIN_PANEL_WIDTH = 140;
+    private static final int BASE_PANEL_WIDTH = 476;
+    private static final int MIN_PANEL_WIDTH = 200;
     private static final int ROW_HEIGHT = 22;
-    private static final int COLUMN_GAP = 12;
-    private static final int TAB_GAP = 6;
-    private static final int SCROLL_STEP = 28;
+    private static final int COLUMN_GAP = 14;
+    private static final int TAB_GAP = 8;
+    private static final int SCROLL_STEP = 24;
 
     private final Screen previous;
     private final List<LayoutWidget> pageWidgets = new ArrayList<>();
@@ -55,7 +55,7 @@ public final class HallowConfigScreen extends Screen {
         xRayResourcePackBox = null;
         contentHeight = 0;
 
-        int tabY = panelTop() + 20;
+        int tabY = panelTop() + 36;
         int tabLeft = panelLeft() + 8;
         int tabsPerRow = tabsPerRow();
 
@@ -559,14 +559,24 @@ public final class HallowConfigScreen extends Screen {
         int panelTop = panelTop();
         int panelBottom = panelBottom();
 
-        graphics.fill(0, 0, this.width, this.height, 0xCC0A0D12);
-        graphics.fill(panelLeft - 6, panelTop - 6, panelRight + 6, panelBottom + 6, 0x55000000);
-        graphics.fill(panelLeft, panelTop, panelRight, panelBottom, 0xD0161B24);
+        graphics.fill(0, 0, this.width, this.height, 0xD3090C12);
+        graphics.fill(0, 0, this.width, this.height / 3, 0x2B1A2635);
+        graphics.fill(panelLeft - 6, panelTop - 6, panelRight + 6, panelBottom + 6, 0x33000000);
+        graphics.fill(panelLeft, panelTop, panelRight, panelBottom, 0xDA131A23);
         graphics.fill(panelLeft, panelTop, panelRight, panelTop + 3, 0xFFCB9344);
-        graphics.fill(contentLeft(), contentTop(), panelRight - 10, contentBottom(), 0x66101920);
+        graphics.fill(panelLeft + 1, panelTop + 4, panelRight - 1, panelTop + 28, 0x4A243242);
+        graphics.fill(contentLeft(), contentTop(), panelRight - 10, contentBottom(), 0x54101920);
+        drawContentLanes(graphics);
+        graphics.fill(contentLeft(), helperCardTop(), panelRight - 10, footerTop() - 8, 0x74121922);
 
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 8, 0xFFF3D9A0);
-        graphics.drawCenteredString(this.font, Component.literal(category.subtitle()), this.width / 2, panelTop + 6, 0xFFB9C4D8);
+        graphics.drawString(this.font, this.title, panelLeft + 12, panelTop + 10, 0xFFF4DFC0, true);
+        graphics.drawString(this.font, category.subtitle(), panelLeft + 12, panelTop + 22, 0xFF9BAABB, false);
+        int chipX = panelRight - 12;
+        chipX = drawChip(graphics, chipX, panelTop + 10, pageWidgets.size() + " controls", 0xFF5A8AC9);
+        chipX = drawChip(graphics, chipX - 6, panelTop + 10, category.label, 0xFFCB9344);
+        if (maxScroll > 0) {
+            drawChip(graphics, chipX - 6, panelTop + 10, "Scroll", 0xFF7E95E8);
+        }
 
         if (category == Category.VISION && xRayBlocksBox != null && xRayBlocksBox.visible) {
             graphics.drawString(this.font, "Tracked X-Ray blocks (comma-separated ids; blank resets to ore defaults)", xRayBlocksBox.getX(), xRayBlocksBox.getY() - 11, 0xFF8FA0B8, false);
@@ -575,18 +585,14 @@ public final class HallowConfigScreen extends Screen {
                 graphics.drawString(this.font, "Managed X-Ray pack source (copied into resourcepacks when X-Ray is enabled)", xRayResourcePackBox.getX(), xRayResourcePackBox.getY() - 11, 0xFF8FA0B8, false);
                 graphics.drawString(this.font, xRayPackSourceStatus(xRayResourcePackBox.getValue()), xRayResourcePackBox.getX(), xRayResourcePackBox.getY() + 25, 0xFF8FA0B8, false);
             }
-        } else if (category == Category.ACCESS_AND_HUD) {
-            graphics.drawCenteredString(this.font, Component.literal("Hallow data lives in .hallow. F7 opens the Hallow menu screen. Camera: B save, N cycle, M select, L lock, K follow."), this.width / 2, helperTextY(), 0xFF8FA0B8);
-        } else if (category == Category.PROTECTION) {
-            graphics.drawCenteredString(this.font, Component.literal("Protection settings sync to singleplayer and Hallow-enabled servers."), this.width / 2, helperTextY(), 0xFF8FA0B8);
         }
 
         if (maxScroll > 0) {
-            graphics.drawCenteredString(this.font, Component.literal("Scroll to reveal more settings"), this.width / 2, helperTextY() - 14, 0xFF8FA0B8);
             graphics.drawString(this.font, Component.literal(scrollOffset + " / " + maxScroll), panelRight - 42, contentTop() + 6, 0xFF8FA0B8, false);
         }
 
-        graphics.drawCenteredString(this.font, Component.literal("Hold F6 for cheat shortcuts only. F7 opens the menu. Shortcuts include 1-0, -, =, [, ], \\, plus P/T/C/W. V opens HallowInv. H/J copy target hands."), this.width / 2, helperTextY() + 14, 0xFF8FA0B8);
+        graphics.drawString(this.font, categoryHelperText(), contentLeft() + 10, helperTextY(), 0xFFDDE5EE, false);
+        graphics.drawString(this.font, "Config file: " + HallowStorage.configPath().getFileName() + " | F7 deck shortcuts: F6 layer, V HallowInv, H/J target copy.", contentLeft() + 10, helperTextY() + 12, 0xFF90A1B3, false);
 
         super.render(graphics, mouseX, mouseY, partialTick);
     }
@@ -631,11 +637,11 @@ public final class HallowConfigScreen extends Screen {
     }
 
     private int panelTop() {
-        return 18;
+        return 14;
     }
 
     private int panelBottom() {
-        return this.height - 12;
+        return this.height - 10;
     }
 
     private int contentLeft() {
@@ -643,11 +649,15 @@ public final class HallowConfigScreen extends Screen {
     }
 
     private int contentTop() {
-        return panelTop() + 32 + tabAreaHeight();
+        return panelTop() + 48 + tabAreaHeight();
     }
 
     private int helperTextY() {
-        return footerTop() - 18;
+        return helperCardTop() + 8;
+    }
+
+    private int helperCardTop() {
+        return footerTop() - 42;
     }
 
     private int footerTop() {
@@ -655,7 +665,7 @@ public final class HallowConfigScreen extends Screen {
     }
 
     private int contentBottom() {
-        return Math.max(contentTop() + 76, helperTextY() - 10);
+        return Math.max(contentTop() + 92, helperCardTop() - 10);
     }
 
     private int columnWidth() {
@@ -679,11 +689,11 @@ public final class HallowConfigScreen extends Screen {
     }
 
     private boolean stackedFooter() {
-        return panelWidth() < 340;
+        return panelWidth() < 380;
     }
 
     private int footerHeight() {
-        return stackedFooter() ? 68 : 20;
+        return stackedFooter() ? 72 : 24;
     }
 
     private int tabsPerRow() {
@@ -731,6 +741,51 @@ public final class HallowConfigScreen extends Screen {
 
     private static String format(double value, int decimals) {
         return String.format(Locale.ROOT, "%." + decimals + "f", value);
+    }
+
+    private void drawContentLanes(GuiGraphics graphics) {
+        int laneTop = contentTop() + 4;
+        int laneBottom = contentBottom() - 8;
+        if (compactLayout()) {
+            graphics.fill(contentLeft(), laneTop, panelRight() - 10, laneBottom, 0x4617202A);
+            return;
+        }
+
+        graphics.fill(contentLeft(), laneTop, contentLeft() + columnWidth(), laneBottom, 0x4017202A);
+        graphics.fill(rightColumnLeft(), laneTop, rightColumnLeft() + columnWidth(), laneBottom, 0x40131C25);
+    }
+
+    private int drawChip(GuiGraphics graphics, int right, int top, String text, int accentColor) {
+        int width = this.font.width(text) + 12;
+        int left = right - width;
+        graphics.fill(left, top, right, top + 14, accentColor);
+        graphics.fill(left + 1, top + 1, right - 1, top + 13, 0xD010151B);
+        graphics.drawString(this.font, fitText(text, 110), left + 6, top + 3, 0xFFF4E4C1, false);
+        return left;
+    }
+
+    private String fitText(String text, int maxWidth) {
+        if (this.font.width(text) <= maxWidth) {
+            return text;
+        }
+
+        String ellipsis = "...";
+        int targetWidth = Math.max(0, maxWidth - this.font.width(ellipsis));
+        String trimmed = text;
+        while (!trimmed.isEmpty() && this.font.width(trimmed) > targetWidth) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        return trimmed + ellipsis;
+    }
+
+    private String categoryHelperText() {
+        return switch (category) {
+            case VISION -> "Vision settings cover fullbright, managed X-Ray packs, ore targets, and NoRender cleanup.";
+            case TRAVERSAL -> "Traversal tunes movement assists, speed settings, and friction or collision modifiers.";
+            case AWARENESS -> "Awareness controls radar range, prediction detail, and nearby tracking behavior.";
+            case ACCESS_AND_HUD -> "Access/HUD handles HallowInv defaults, minimap presentation, saved cameras, and anchor persistence.";
+            case PROTECTION -> "Protection values sync to singleplayer and Hallow-enabled servers when support exists.";
+        };
     }
 
     private static String normalizeText(String value) {

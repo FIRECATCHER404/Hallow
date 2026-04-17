@@ -2,7 +2,7 @@
 
 `Hallow` is a client-side Fabric cheat mod for Minecraft `1.21.11`.
 
-This is a full cheat client mod with vision, movement, awareness, camera, inventory, protection, and managed resource-pack features, plus a clickable `F7` menu screen built around quick in-game controls.
+This is a full cheat client mod with vision, movement, awareness, camera, inventory, protection, managed resource-pack features, and a redesigned clickable `F7` control deck built around quick in-game controls.
 
 ## Current Feature Set
 
@@ -34,7 +34,7 @@ This is a full cheat client mod with vision, movement, awareness, camera, invent
 
 ### Camera / Utility
 
-- Wrapped multi-section clickable `F7` menu screen
+- Searchable multi-section `F7` control deck with richer cards, badges, and profile context
 - Saved camera points
 - Player camera browse / lock / follow
 - Live target hand copy
@@ -96,6 +96,8 @@ Hold `F6` and press. `F6` is shortcut-only now and does not open the menu:
 ## Config
 
 If `Mod Menu` is installed, `Hallow` exposes a config screen from the mod list.
+
+The config surface now uses wider card lanes and clearer helper panels so navigation is faster on both compact and wide layouts.
 
 Runtime config is stored in:
 

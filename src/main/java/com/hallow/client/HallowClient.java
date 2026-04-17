@@ -334,13 +334,13 @@ public final class HallowClient implements ClientModInitializer {
 
     public List<HallowHudRenderer.Section> buildDeckSections(Minecraft client) {
         List<HallowHudRenderer.Section> sections = new ArrayList<>();
-        sections.add(new HallowHudRenderer.Section("Vision", 0xFF7EA7DA, List.of(
+        sections.add(new HallowHudRenderer.Section("Vision", "Render clarity, pack control, and visibility tools.", 0xFF7EA7DA, List.of(
             moduleEntry(client, fullbrightModule),
             moduleEntry(client, xRayModule),
             moduleEntry(client, noRenderModule),
             moduleEntry(client, playerEspModule)
         )));
-        sections.add(new HallowHudRenderer.Section("Traversal", 0xFF61B887, List.of(
+        sections.add(new HallowHudRenderer.Section("Traversal", "Movement modules and moment-to-moment automation.", 0xFF61B887, List.of(
             moduleEntry(client, flightModule),
             moduleEntry(client, autoSprintModule),
             moduleEntry(client, stepAssistModule),
@@ -351,27 +351,27 @@ public final class HallowClient implements ClientModInitializer {
             moduleEntry(client, noPushModule),
             moduleEntry(client, noWebModule)
         )));
-        sections.add(new HallowHudRenderer.Section("Awareness", 0xFF9A8BE6, List.of(
+        sections.add(new HallowHudRenderer.Section("Awareness", "Nearby tracking, radar, and projectile previews.", 0xFF9A8BE6, List.of(
             moduleEntry(client, lootCompassModule),
             moduleEntry(client, threatRadarModule),
             moduleEntry(client, projectilePredictModule)
         )));
-        sections.add(new HallowHudRenderer.Section("Access", 0xFFE29F63, List.of(
+        sections.add(new HallowHudRenderer.Section("Access", "Inventory tools, map toggles, and anchor utilities.", 0xFFE29F63, List.of(
             moduleEntry(client, creativeAccessModule),
-            actionEntry("Open HallowInv", () -> creativeAccessModule.openFromShortcut(client), true, 0xFFCB9344),
+            actionEntry("Open HallowInv", "Launch the inventory editor immediately.", "OPEN", () -> creativeAccessModule.openFromShortcut(client), true, 0xFFCB9344),
             moduleEntry(client, chestStealerModule),
-            actionEntry(anchorPulseModule.legendLine(client), () -> anchorPulseModule.trigger(client), true, 0xFFE2A654),
-            actionEntry("Minimap [" + onOff(minimapRenderer.isVisible()) + "]", () -> minimapRenderer.toggle(client), minimapRenderer.isVisible(), 0xFF66BFD7)
+            actionEntry("Anchor Pulse", anchorPulseDetail(client), anchorPulseBadge(client), () -> anchorPulseModule.trigger(client), true, 0xFFE2A654),
+            actionEntry("Minimap", "Quick toggle for the terrain and player overlay.", onOff(minimapRenderer.isVisible()), () -> minimapRenderer.toggle(client), minimapRenderer.isVisible(), 0xFF66BFD7)
         )));
-        sections.add(new HallowHudRenderer.Section("Camera", 0xFF55B6C7, List.of(
-            actionEntry("Save camera point [" + HallowCameraController.savedPointCount() + "]", () -> HallowCameraController.saveCurrentViewFromMenu(client), HallowCameraController.savedPointCount() > 0, 0xFF55B6C7),
-            actionEntry("Clear saved points here", () -> HallowCameraController.clearCurrentDimensionPointsFromMenu(client), HallowCameraController.savedPointCount() > 0, 0xFFC96C6C),
-            actionEntry("Cycle saved views", () -> HallowCameraController.cycleSavedViewFromMenu(client), HallowCameraController.isFixedViewActive(), 0xFF7E95E8),
-            actionEntry("Browse players [" + onOff(HallowCameraController.isPlayerBrowseActive()) + "]", () -> HallowCameraController.togglePlayerBrowseFromMenu(client), HallowCameraController.isPlayerBrowseActive(), 0xFF55B6C7),
-            actionEntry(lockTargetLabel(client), () -> HallowCameraController.toggleLockCurrentTargetFromMenu(client), HallowCameraController.isLockedTargetActive(), 0xFF55B6C7),
-            actionEntry(followTargetLabel(client), () -> HallowCameraController.toggleFollowCurrentTargetFromMenu(client), HallowCameraController.isFollowTargetActive(), 0xFF55B6C7)
+        sections.add(new HallowHudRenderer.Section("Camera", "Saved viewpoints, browse targets, lock, and follow tools.", 0xFF55B6C7, List.of(
+            actionEntry("Save camera point", "Store the current view for this dimension. Total: " + HallowCameraController.savedPointCount(), "SAVE", () -> HallowCameraController.saveCurrentViewFromMenu(client), true, 0xFF55B6C7),
+            actionEntry("Clear saved points here", "Remove stored camera points from the current dimension.", "CLEAR", () -> HallowCameraController.clearCurrentDimensionPointsFromMenu(client), HallowCameraController.savedPointCount() > 0, 0xFFC96C6C),
+            actionEntry("Cycle saved views", "Jump through stored camera positions with N.", HallowCameraController.isFixedViewActive() ? "LIVE" : "BROWSE", () -> HallowCameraController.cycleSavedViewFromMenu(client), HallowCameraController.isFixedViewActive(), 0xFF7E95E8),
+            actionEntry("Browse players", "Preview other players and use the mouse wheel to cycle.", onOff(HallowCameraController.isPlayerBrowseActive()), () -> HallowCameraController.togglePlayerBrowseFromMenu(client), HallowCameraController.isPlayerBrowseActive(), 0xFF55B6C7),
+            actionEntry(lockTargetLabel(client), "Jump to the selected player camera and hold position.", HallowCameraController.isLockedTargetActive() ? "LOCKED" : "LOCK", () -> HallowCameraController.toggleLockCurrentTargetFromMenu(client), HallowCameraController.isLockedTargetActive(), 0xFF55B6C7),
+            actionEntry(followTargetLabel(client), "Track the selected target until you return to your player.", HallowCameraController.isFollowTargetActive() ? "FOLLOW" : "TRACK", () -> HallowCameraController.toggleFollowCurrentTargetFromMenu(client), HallowCameraController.isFollowTargetActive(), 0xFF55B6C7)
         )));
-        sections.add(new HallowHudRenderer.Section("Protection", 0xFFC96C6C, List.of(
+        sections.add(new HallowHudRenderer.Section("Protection", "Damage shields and inventory safety for compatible sessions.", 0xFFC96C6C, List.of(
             protectionEntry(client, "Invulnerable", protection -> protection.invulnerable, (protection, value) -> protection.invulnerable = value),
             protectionEntry(client, "Block Fall Damage", protection -> protection.blockFallDamage, (protection, value) -> protection.blockFallDamage = value),
             protectionEntry(client, "Block Drowning", protection -> protection.blockDrowningDamage, (protection, value) -> protection.blockDrowningDamage = value),
@@ -380,12 +380,12 @@ public final class HallowClient implements ClientModInitializer {
             protectionEntry(client, "Keep Inventory", protection -> protection.keepInventory, (protection, value) -> protection.keepInventory = value),
             protectionEntry(client, "Block PvP", protection -> protection.blockPvpDamage, (protection, value) -> protection.blockPvpDamage = value)
         )));
-        sections.add(new HallowHudRenderer.Section("Utility", 0xFFB9C06E, List.of(
-            actionEntry("Status HUD [" + onOff(statusHudVisible) + "]", () -> toggleStatusHud(client), statusHudVisible, 0xFF5A8AC9),
-            actionEntry("Copy selected mainhand", () -> copySelectedTargetHand(client, false), HallowCameraController.currentLiveTarget(client) != null, 0xFFB9C06E),
-            actionEntry("Copy selected offhand", () -> copySelectedTargetHand(client, true), HallowCameraController.currentLiveTarget(client) != null, 0xFFB9C06E),
-            actionEntry("Open config screen", () -> client.setScreen(new HallowConfigScreen(client.screen)), false, 0xFF8FA0B8),
-            actionEntry("Close menu", () -> client.setScreen(null), false, 0xFF8FA0B8)
+        sections.add(new HallowHudRenderer.Section("Utility", "Deck overlays, target copy helpers, and configuration access.", 0xFFB9C06E, List.of(
+            actionEntry("Status HUD", "Toggle the lightweight in-game status overlay.", onOff(statusHudVisible), () -> toggleStatusHud(client), statusHudVisible, 0xFF5A8AC9),
+            actionEntry("Copy selected mainhand", "Clone the selected live target's main hand into your current slot.", "COPY", () -> copySelectedTargetHand(client, false), HallowCameraController.currentLiveTarget(client) != null, 0xFFB9C06E),
+            actionEntry("Copy selected offhand", "Clone the selected live target's offhand into your offhand slot.", "COPY", () -> copySelectedTargetHand(client, true), HallowCameraController.currentLiveTarget(client) != null, 0xFFB9C06E),
+            actionEntry("Open config screen", "Edit saved defaults, ranges, and visual settings.", "OPEN", () -> client.setScreen(new HallowConfigScreen(client.screen)), true, 0xFF8FA0B8),
+            actionEntry("Close menu", "Return to gameplay and keep current module states.", "ESC", () -> client.setScreen(null), true, 0xFF8FA0B8)
         )));
         return sections;
     }
@@ -409,7 +409,16 @@ public final class HallowClient implements ClientModInitializer {
     }
 
     private HallowHudRenderer.Entry moduleEntry(Minecraft client, CheatModule module) {
-        return actionEntry(module.legendLine(client), () -> module.trigger(client), module.isEnabled(), module.isEnabled() ? 0xFF61B887 : 0xFF5B6A80);
+        boolean enabled = module.isEnabled();
+        int accent = enabled ? 0xFF61B887 : 0xFF5B6A80;
+        return actionEntry(
+            module.name(),
+            moduleDetail(client, module),
+            enabled ? "ON" : "OFF",
+            () -> module.trigger(client),
+            enabled,
+            accent
+        );
     }
 
     private HallowHudRenderer.Entry protectionEntry(
@@ -419,7 +428,7 @@ public final class HallowClient implements ClientModInitializer {
         BiConsumer<HallowConfig.ProtectionSettings, Boolean> setter
     ) {
         boolean enabled = getter.apply(HallowConfigManager.get().protection);
-        return actionEntry(label + " [" + onOff(enabled) + "]", () -> {
+        return actionEntry(label, "Synced to singleplayer and Hallow-aware servers.", enabled ? "ON" : "OFF", () -> {
             HallowConfig next = HallowConfigManager.get().copy();
             boolean updated = !getter.apply(next.protection);
             setter.accept(next.protection, updated);
@@ -429,8 +438,16 @@ public final class HallowClient implements ClientModInitializer {
         }, enabled, enabled ? 0xFF7EBE73 : 0xFF7B5C5C);
     }
 
+    private HallowHudRenderer.Entry actionEntry(String label, String detail, String badge, Runnable action, boolean active, int accentColor) {
+        return new HallowHudRenderer.Entry(label, detail, badge, action, accentColorForState(accentColor, active), active);
+    }
+
+    private HallowHudRenderer.Entry actionEntry(String label, String detail, Runnable action, boolean active, int accentColor) {
+        return actionEntry(label, detail, "", action, active, accentColor);
+    }
+
     private HallowHudRenderer.Entry actionEntry(String label, Runnable action, boolean active, int accentColor) {
-        return new HallowHudRenderer.Entry(label, action, accentColorForState(accentColor, active));
+        return actionEntry(label, "", "", action, active, accentColor);
     }
 
     private int accentColorForState(int accentColor, boolean active) {
@@ -469,6 +486,28 @@ public final class HallowClient implements ClientModInitializer {
 
     private String onOff(boolean enabled) {
         return enabled ? "ON" : "OFF";
+    }
+
+    private String moduleDetail(Minecraft client, CheatModule module) {
+        if (module.isEnabled()) {
+            List<String> lines = module.hudLines(client);
+            if (!lines.isEmpty()) {
+                return lines.getFirst();
+            }
+        }
+        return "Shortcut: hold F6 then press " + module.shortcutLabel() + ".";
+    }
+
+    private String anchorPulseBadge(Minecraft client) {
+        return anchorPulseModule.legendLine(client).contains("[CLEAR]") ? "CLEAR" : "SET";
+    }
+
+    private String anchorPulseDetail(Minecraft client) {
+        List<String> lines = anchorPulseModule.hudLines(client);
+        if (!lines.isEmpty()) {
+            return lines.getFirst();
+        }
+        return "Store the current position as a tracked anchor.";
     }
 
     public boolean isStatusHudVisible() {
