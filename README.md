@@ -109,7 +109,7 @@ Per-world / per-server state is stored in:
 
 That includes enabled module state, saved camera points, minimap visibility, and anchor state.
 
-Hallow now bundles `hallow_xray_pack.zip` directly inside the mod jar. When `X-Ray` is enabled, Hallow copies that built-in pack into the active game's `resourcepacks` directory and toggles it on automatically.
+Hallow now bundles `hallow_xray_pack.zip` directly inside the mod jar. The current built-in default is based on `Xray_Ultimate_1.21_v5.3.1.zip`, and when `X-Ray` is enabled Hallow copies that bundled pack into the active game's `resourcepacks` directory and toggles it on automatically.
 
 If you want to swap in a different pack, the Vision page still exposes an optional override path. When that override is blank, invalid, or missing, Hallow falls back to the built-in pack instead of depending on a file in `Downloads`.
 
