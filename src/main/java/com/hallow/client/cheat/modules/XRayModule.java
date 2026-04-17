@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.hallow.client.DirectionUtil;
+import com.hallow.client.HallowManagedResourcePack;
 import com.hallow.client.HallowRuntimeState;
 import com.hallow.client.XRayRules;
 import com.hallow.client.cheat.CheatModule;
@@ -20,6 +21,7 @@ public final class XRayModule extends CheatModule {
     private final List<HighlightTarget> targets = new ArrayList<>();
     private int scanCooldown;
     private String status = "X-Ray: idle";
+    private boolean usingManagedPack;
 
     public XRayModule(int slot) {
         super("X-Ray", slot, true);
@@ -28,6 +30,10 @@ public final class XRayModule extends CheatModule {
     @Override
     public void tick(Minecraft client) {
         if (!isEnabled()) {
+            return;
+        }
+
+        if (usingManagedPack) {
             return;
         }
 
@@ -48,15 +54,19 @@ public final class XRayModule extends CheatModule {
     @Override
     protected void onEnable(Minecraft client) {
         scanCooldown = 0;
-        HallowRuntimeState.setXRayEnabled(client, true);
+        targets.clear();
+        usingManagedPack = activateManagedPack(client);
+        HallowRuntimeState.setXRayEnabled(client, !usingManagedPack);
     }
 
     @Override
     protected void onDisable(Minecraft client) {
+        usingManagedPack = false;
         scanCooldown = 0;
         targets.clear();
         status = "X-Ray: idle";
         HallowRuntimeState.setXRayEnabled(client, false);
+        HallowManagedResourcePack.disableXRayPack(client);
     }
 
     @Override
@@ -66,6 +76,25 @@ public final class XRayModule extends CheatModule {
 
     public List<HighlightTarget> targets() {
         return List.copyOf(targets);
+    }
+
+    private boolean activateManagedPack(Minecraft client) {
+        HallowManagedResourcePack.PackToggleResult result = HallowManagedResourcePack.enableXRayPack(
+            client,
+            HallowConfigManager.get().xray.resourcePackPath
+        );
+        if (!result.succeeded()) {
+            status = "X-Ray pack unavailable | fallback " + HallowConfigManager.get().xray.mode.label();
+            return false;
+        }
+
+        status = result.changed() ? "X-Ray pack: enabling..." : "X-Ray pack: active";
+        result.reloadFuture().whenComplete((ignored, error) -> {
+            if (client != null) {
+                client.execute(() -> status = error == null ? "X-Ray pack: active" : "X-Ray pack: reload failed");
+            }
+        });
+        return true;
     }
 
     private void scan(Minecraft client) {

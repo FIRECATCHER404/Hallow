@@ -64,6 +64,7 @@ public final class HallowClient implements ClientModInitializer {
 
     private final List<CheatModule> modules = new ArrayList<>();
     private final Set<Integer> shortcutPressedKeys = new HashSet<>();
+    private final HallowStatusHudRenderer statusHudRenderer = new HallowStatusHudRenderer();
 
     private FullbrightModule fullbrightModule;
     private FlightModule flightModule;
@@ -86,6 +87,7 @@ public final class HallowClient implements ClientModInitializer {
     private NoWebModule noWebModule;
     private HallowMinimapRenderer minimapRenderer;
     private boolean defaultsApplied;
+    private boolean statusHudVisible;
     private boolean chordHeld;
     private boolean hudTogglePressed;
     private boolean creativeShortcutPressed;
@@ -325,6 +327,7 @@ public final class HallowClient implements ClientModInitializer {
             return;
         }
 
+        renderStatusHud(graphics, client);
         renderSelectedPlayerOverlay(graphics, client);
         minimapRenderer.render(graphics, client);
     }
@@ -378,12 +381,31 @@ public final class HallowClient implements ClientModInitializer {
             protectionEntry(client, "Block PvP", protection -> protection.blockPvpDamage, (protection, value) -> protection.blockPvpDamage = value)
         )));
         sections.add(new HallowHudRenderer.Section("Utility", 0xFFB9C06E, List.of(
+            actionEntry("Status HUD [" + onOff(statusHudVisible) + "]", () -> toggleStatusHud(client), statusHudVisible, 0xFF5A8AC9),
             actionEntry("Copy selected mainhand", () -> copySelectedTargetHand(client, false), HallowCameraController.currentLiveTarget(client) != null, 0xFFB9C06E),
             actionEntry("Copy selected offhand", () -> copySelectedTargetHand(client, true), HallowCameraController.currentLiveTarget(client) != null, 0xFFB9C06E),
             actionEntry("Open config screen", () -> client.setScreen(new HallowConfigScreen(client.screen)), false, 0xFF8FA0B8),
             actionEntry("Close menu", () -> client.setScreen(null), false, 0xFF8FA0B8)
         )));
         return sections;
+    }
+
+    public int activeModuleCount() {
+        int count = 0;
+        for (CheatModule module : modules) {
+            if (module.isEnabled()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public String currentProfileLabel() {
+        HallowStorage.ProfileIdentity profile = HallowStorage.activeProfile();
+        if (profile == null) {
+            return "No active profile";
+        }
+        return profile.label() + " [" + profile.source() + "]";
     }
 
     private HallowHudRenderer.Entry moduleEntry(Minecraft client, CheatModule module) {
@@ -449,8 +471,18 @@ public final class HallowClient implements ClientModInitializer {
         return enabled ? "ON" : "OFF";
     }
 
+    public boolean isStatusHudVisible() {
+        return statusHudVisible;
+    }
+
+    public void toggleStatusHud(Minecraft client) {
+        setStatusHudVisible(!statusHudVisible, true);
+        announce(client, statusHudVisible ? "Status HUD enabled." : "Status HUD hidden.");
+    }
+
     private void resetModules(Minecraft client) {
         defaultsApplied = false;
+        statusHudVisible = false;
         chordHeld = false;
         hudTogglePressed = false;
         creativeShortcutPressed = false;
@@ -498,6 +530,7 @@ public final class HallowClient implements ClientModInitializer {
         creativeAccessModule.restoreEnabledState(client, moduleEnabled(state, creativeAccessModule.name(), config.creativeAccess.autoEnable));
         applyModuleState(client, noRenderModule, state, config.noRender.autoEnable);
 
+        setStatusHudVisible(state.loadedFromDisk ? state.hudVisible : config.hud.startVisible, false);
         minimapRenderer.setVisible(state.loadedFromDisk ? state.minimapVisible : config.minimap.startEnabled);
         HallowCameraController.loadSavedPoints(state.savedCameras.stream()
             .map(camera -> new HallowCameraController.CameraPoint(camera.dimension, new net.minecraft.world.phys.Vec3(camera.x, camera.y, camera.z), camera.yaw, camera.pitch))
@@ -529,6 +562,7 @@ public final class HallowClient implements ClientModInitializer {
                 state.enabledModules.put(module.name(), module.isEnabled());
             }
         }
+        state.hudVisible = statusHudVisible;
         state.minimapVisible = minimapRenderer.isVisible();
         state.savedCameras = HallowCameraController.exportSavedPoints().stream().map(point -> {
             HallowProfileState.SavedCamera saved = new HallowProfileState.SavedCamera();
@@ -542,6 +576,23 @@ public final class HallowClient implements ClientModInitializer {
         }).toList();
         state.anchor = anchorPulseModule.exportAnchorState();
         HallowStorage.saveActiveProfile(state);
+    }
+
+    private void renderStatusHud(GuiGraphics graphics, Minecraft client) {
+        if (!statusHudVisible || client.player == null) {
+            return;
+        }
+
+        List<String> lines = new ArrayList<>();
+        lines.add("Profile: " + currentProfileLabel());
+        lines.add("Modules: " + activeModuleCount() + " active | Minimap " + onOff(minimapRenderer.isVisible()));
+        for (CheatModule module : modules) {
+            lines.addAll(module.hudLines(client));
+        }
+        lines.addAll(HallowCameraController.hudLines(client));
+
+        HallowConfig.HudSettings hudConfig = HallowConfigManager.get().hud;
+        statusHudRenderer.render(graphics, client, "Hallow HUD", lines, hudConfig.left, hudConfig.top);
     }
 
     private void renderSelectedPlayerOverlay(GuiGraphics graphics, Minecraft client) {
@@ -603,6 +654,17 @@ public final class HallowClient implements ClientModInitializer {
     private <T extends CheatModule> T register(T module) {
         modules.add(module);
         return module;
+    }
+
+    private void setStatusHudVisible(boolean visible, boolean markDirty) {
+        if (statusHudVisible == visible) {
+            return;
+        }
+
+        statusHudVisible = visible;
+        if (markDirty) {
+            HallowStorage.markDirty();
+        }
     }
 
     private void copySelectedTargetHand(Minecraft client, boolean offhand) {

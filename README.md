@@ -2,14 +2,14 @@
 
 `Hallow` is a client-side Fabric cheat mod for Minecraft `1.21.11`.
 
-This is a full cheat client mod with vision, movement, awareness, camera, inventory, and protection features, plus a clickable `F7` menu screen built around quick in-game controls.
+This is a full cheat client mod with vision, movement, awareness, camera, inventory, protection, and managed resource-pack features, plus a clickable `F7` menu screen built around quick in-game controls.
 
 ## Current Feature Set
 
 ### Vision
 
 - `Fullbright` using the same render path as night vision
-- `X-Ray` with `ESP`, `Spectator View`, and `Ore Mode`
+- `X-Ray` can auto-install and toggle a managed resource pack from your configured source path, with `ESP`, `Spectator View`, and `Ore Mode` kept as fallback behavior if that pack is unavailable
 - `NoRender` for fog, overlays, bobbing, and damage tilt removal
 - `Player ESP` with tracers and player boxes
 
@@ -106,6 +106,12 @@ Per-world / per-server state is stored in:
 - `.hallow/profiles/`
 
 That includes enabled module state, saved camera points, minimap visibility, and anchor state.
+
+The default managed X-Ray pack source points at:
+
+- `~/Downloads/XRAy.zip`
+
+When `X-Ray` is enabled, Hallow copies that file into the active game's `resourcepacks` directory as `hallow_xray_pack.zip` and toggles it on. You can change the source path from the Vision page in the config screen.
 
 ## Notes
 

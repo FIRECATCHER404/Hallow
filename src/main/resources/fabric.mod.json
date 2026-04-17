@@ -3,7 +3,7 @@
   "id": "hallow",
   "version": "${version}",
   "name": "Hallow",
-  "description": "Client-side Fabric cheat mod with movement, vision, ESP, camera, inventory, protection, and a clickable F7 menu screen.",
+  "description": "Client-side Fabric cheat mod with movement, vision, managed X-Ray resource-pack toggles, ESP, camera, inventory, protection, and a clickable F7 menu screen.",
   "icon": "assets/hallow/icon.png",
   "authors": [
     "Firecatcher303"

@@ -1,5 +1,8 @@
 package com.hallow.client.config;
 
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,6 +36,7 @@ public final class HallowConfigScreen extends Screen {
     private HallowConfig workingCopy;
     private Category category = Category.VISION;
     private EditBox xRayBlocksBox;
+    private EditBox xRayResourcePackBox;
     private int scrollOffset;
     private int maxScroll;
     private int contentHeight;
@@ -48,6 +52,7 @@ public final class HallowConfigScreen extends Screen {
         clearWidgets();
         pageWidgets.clear();
         xRayBlocksBox = null;
+        xRayResourcePackBox = null;
         contentHeight = 0;
 
         int tabY = panelTop() + 20;
@@ -194,6 +199,11 @@ public final class HallowConfigScreen extends Screen {
                 }).bounds(left, bottom, width, 20).build()
             );
             bottom += 30;
+            xRayResourcePackBox = addPageWidget(new EditBox(this.font, left, bottom, width, 20, Component.literal("Managed X-Ray pack source")));
+            xRayResourcePackBox.setMaxLength(2048);
+            xRayResourcePackBox.setValue(workingCopy.xray.resourcePackPath);
+            xRayResourcePackBox.setHint(Component.literal("C:\\Users\\you\\Downloads\\XRAy.zip"));
+            bottom += 30;
             addPageWidget(toggle(left, bottom, "NoRender Auto-Enable", workingCopy.noRender.autoEnable, value -> workingCopy.noRender.autoEnable = value));
             bottom += 24;
             addPageWidget(toggle(left, bottom, "Hide Fog", workingCopy.noRender.hideFog, value -> workingCopy.noRender.hideFog = value));
@@ -250,8 +260,13 @@ public final class HallowConfigScreen extends Screen {
                 }
             }).bounds(left + textWidth + 10, blockRowY, panelRight() - (left + textWidth + 10) - 10, 20).build()
         );
-        int noRenderLeftY = blockRowY + 34;
-        int noRenderRightY = blockRowY + 34;
+        int packRowY = blockRowY + 34;
+        xRayResourcePackBox = addPageWidget(new EditBox(this.font, left, packRowY, contentWidth(), 20, Component.literal("Managed X-Ray pack source")));
+        xRayResourcePackBox.setMaxLength(2048);
+        xRayResourcePackBox.setValue(workingCopy.xray.resourcePackPath);
+        xRayResourcePackBox.setHint(Component.literal("C:\\Users\\you\\Downloads\\XRAy.zip"));
+        int noRenderLeftY = packRowY + 34;
+        int noRenderRightY = packRowY + 34;
 
         addPageWidget(toggle(left, noRenderLeftY, "NoRender Auto-Enable", workingCopy.noRender.autoEnable, value -> workingCopy.noRender.autoEnable = value));
         noRenderLeftY += 24;
@@ -522,6 +537,9 @@ public final class HallowConfigScreen extends Screen {
         if (xRayBlocksBox != null) {
             workingCopy.xray.trackedBlocks = parseBlockList(xRayBlocksBox.getValue());
         }
+        if (xRayResourcePackBox != null) {
+            workingCopy.xray.resourcePackPath = normalizeText(xRayResourcePackBox.getValue());
+        }
         HallowConfigManager.applyAndSave(workingCopy);
         HallowRuntimeState.onConfigSaved(this.minecraft);
         onClose();
@@ -553,6 +571,10 @@ public final class HallowConfigScreen extends Screen {
         if (category == Category.VISION && xRayBlocksBox != null && xRayBlocksBox.visible) {
             graphics.drawString(this.font, "Tracked X-Ray blocks (comma-separated ids; blank resets to ore defaults)", xRayBlocksBox.getX(), xRayBlocksBox.getY() - 11, 0xFF8FA0B8, false);
             graphics.drawString(this.font, "Current list resolves to " + parseBlockList(xRayBlocksBox.getValue()).size() + " block ids", xRayBlocksBox.getX(), xRayBlocksBox.getY() + 25, 0xFF8FA0B8, false);
+            if (xRayResourcePackBox != null && xRayResourcePackBox.visible) {
+                graphics.drawString(this.font, "Managed X-Ray pack source (copied into resourcepacks when X-Ray is enabled)", xRayResourcePackBox.getX(), xRayResourcePackBox.getY() - 11, 0xFF8FA0B8, false);
+                graphics.drawString(this.font, xRayPackSourceStatus(xRayResourcePackBox.getValue()), xRayResourcePackBox.getX(), xRayResourcePackBox.getY() + 25, 0xFF8FA0B8, false);
+            }
         } else if (category == Category.ACCESS_AND_HUD) {
             graphics.drawCenteredString(this.font, Component.literal("Hallow data lives in .hallow. F7 opens the Hallow menu screen. Camera: B save, N cycle, M select, L lock, K follow."), this.width / 2, helperTextY(), 0xFF8FA0B8);
         } else if (category == Category.PROTECTION) {
@@ -711,8 +733,28 @@ public final class HallowConfigScreen extends Screen {
         return String.format(Locale.ROOT, "%." + decimals + "f", value);
     }
 
+    private static String normalizeText(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private static String xRayPackSourceStatus(String value) {
+        String normalized = normalizeText(value);
+        if (normalized.isEmpty()) {
+            return "No source path configured. X-Ray will fall back to the built-in scan mode.";
+        }
+
+        try {
+            Path path = Path.of(normalized);
+            return Files.exists(path)
+                ? "Source pack found: " + path.getFileName()
+                : "Source pack missing: " + normalized;
+        } catch (InvalidPathException ignored) {
+            return "Invalid source path: " + normalized;
+        }
+    }
+
     private enum Category {
-        VISION("Vision", "Vision stack: Fullbright, X-Ray, and NoRender"),
+        VISION("Vision", "Vision stack: Fullbright, X-Ray pack control, and NoRender"),
         TRAVERSAL("Traversal", "Movement cheats and mobility tuning"),
         AWARENESS("Awareness", "Radar, trajectory previews, and nearby tracking"),
         ACCESS_AND_HUD("Access/HUD", "HallowInv, camera points, anchors, minimap, and the F7 menu"),

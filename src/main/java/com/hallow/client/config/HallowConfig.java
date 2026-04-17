@@ -1,5 +1,6 @@
 package com.hallow.client.config;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Locale;
 import net.minecraft.resources.Identifier;
 
 public final class HallowConfig {
+    private static final String DEFAULT_XRAY_RESOURCE_PACK_PATH = Path.of(System.getProperty("user.home", "."), "Downloads", "XRAy.zip").toString();
     private static final List<String> DEFAULT_XRAY_BLOCKS = List.of(
         "minecraft:coal_ore",
         "minecraft:deepslate_coal_ore",
@@ -73,6 +75,7 @@ public final class HallowConfig {
         xray.scanInterval = clamp(xray.scanInterval, 4, 40);
         xray.spectatorPeekDistance = clamp(xray.spectatorPeekDistance, 1.0, 8.0);
         xray.spectatorPush = clamp(xray.spectatorPush, 0.05, 1.5);
+        xray.resourcePackPath = normalizeText(xray.resourcePackPath);
         xray.trackedBlocks = normalizeBlockIds(xray.trackedBlocks, DEFAULT_XRAY_BLOCKS);
 
         projectilePredict.maxSteps = clamp(projectilePredict.maxSteps, 30, 240);
@@ -104,6 +107,10 @@ public final class HallowConfig {
 
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private static String normalizeText(String value) {
+        return value == null ? "" : value.trim();
     }
 
     public static List<String> defaultXRayBlockIds() {
@@ -176,6 +183,7 @@ public final class HallowConfig {
         public int scanInterval = 12;
         public double spectatorPeekDistance = 4.5;
         public double spectatorPush = 0.35;
+        public String resourcePackPath = DEFAULT_XRAY_RESOURCE_PACK_PATH;
         public List<String> trackedBlocks = defaultXRayBlockIds();
     }
 
