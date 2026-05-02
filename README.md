@@ -31,6 +31,7 @@ This is a full cheat client mod with vision, movement, awareness, camera, invent
 - `Threat Radar`
 - `Projectile Predict`
 - `Minimap`
+- `Breadcrumb Trail`
 
 ### Camera / Utility
 
@@ -67,6 +68,7 @@ Hold `F6` and press. `F6` is shortcut-only now and does not open the menu:
 - `0`: `Anchor Pulse`
 - `-`: `Projectile Predict`
 - `=`: `NoRender`
+- `R`: `Breadcrumb Trail`
 - `[`: `SafeWalk`
 - `]`: `NoSlow`
 - `\`: `NoPush`
@@ -118,6 +120,7 @@ Hallow now bundles `hallow_xray_pack.zip` directly inside the mod jar. The curre
 - The `F7` menu is a real clickable screen, so it releases the mouse, blocks player controls while open, and keeps its wrapped sections inside the viewport with scrolling when needed.
 - `HallowInv` supports live client inventory editing, with extra sync support where the matching server payload exists.
 - `Projectile Predict` renders a translucent arc with landing marker instead of a simple point trail.
+- `Breadcrumb Trail` renders a fading 3D line through your recent path, with configurable sampling, length, width, and core glow.
 - Player camera browsing is detached from your movement entity, so you can still move while looking through another player's view.
 
 ## Build

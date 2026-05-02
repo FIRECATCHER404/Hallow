@@ -369,6 +369,18 @@ public final class HallowConfigScreen extends Screen {
             addPageWidget(new DoubleSlider(left, bottom, width, "Predict Line Width", 1.0, 6.0, workingCopy.projectilePredict.lineWidth, value -> workingCopy.projectilePredict.lineWidth = value, value -> format(value, 1)));
             bottom += 24;
             addPageWidget(toggle(left, bottom, "Show Landing Marker", workingCopy.projectilePredict.showLandingMarker, value -> workingCopy.projectilePredict.showLandingMarker = value));
+            bottom += 24;
+            addPageWidget(toggle(left, bottom, "Breadcrumb Trail Auto-Enable", workingCopy.breadcrumbTrail.autoEnable, value -> workingCopy.breadcrumbTrail.autoEnable = value));
+            bottom += 24;
+            addPageWidget(new IntSlider(left, bottom, width, "Trail Points", 16, 512, workingCopy.breadcrumbTrail.maxPoints, value -> workingCopy.breadcrumbTrail.maxPoints = value, value -> Integer.toString(value)));
+            bottom += 24;
+            addPageWidget(new DoubleSlider(left, bottom, width, "Trail Sample Distance", 0.1, 3.0, workingCopy.breadcrumbTrail.sampleDistance, value -> workingCopy.breadcrumbTrail.sampleDistance = value, value -> format(value, 2) + "b"));
+            bottom += 24;
+            addPageWidget(new DoubleSlider(left, bottom, width, "Trail Line Width", 1.0, 8.0, workingCopy.breadcrumbTrail.lineWidth, value -> workingCopy.breadcrumbTrail.lineWidth = value, value -> format(value, 1)));
+            bottom += 24;
+            addPageWidget(toggle(left, bottom, "Fade Old Trail", workingCopy.breadcrumbTrail.fade, value -> workingCopy.breadcrumbTrail.fade = value));
+            bottom += 24;
+            addPageWidget(toggle(left, bottom, "White Trail Core", workingCopy.breadcrumbTrail.whiteCore, value -> workingCopy.breadcrumbTrail.whiteCore = value));
 
             return bottom + 24;
         }
@@ -401,10 +413,24 @@ public final class HallowConfigScreen extends Screen {
         addPageWidget(toggle(left, predictLeftY, "Projectile Predict Auto-Enable", workingCopy.projectilePredict.autoEnable, value -> workingCopy.projectilePredict.autoEnable = value));
         predictLeftY += 24;
         addPageWidget(new IntSlider(left, predictLeftY, columnWidth, "Predict Steps", 30, 240, workingCopy.projectilePredict.maxSteps, value -> workingCopy.projectilePredict.maxSteps = value, value -> Integer.toString(value)));
+        predictLeftY += 34;
 
         addPageWidget(new DoubleSlider(right, predictRightY, columnWidth, "Predict Line Width", 1.0, 6.0, workingCopy.projectilePredict.lineWidth, value -> workingCopy.projectilePredict.lineWidth = value, value -> format(value, 1)));
         predictRightY += 24;
         addPageWidget(toggle(right, predictRightY, "Show Landing Marker", workingCopy.projectilePredict.showLandingMarker, value -> workingCopy.projectilePredict.showLandingMarker = value));
+        predictRightY += 34;
+
+        addPageWidget(toggle(left, predictLeftY, "Breadcrumb Trail Auto-Enable", workingCopy.breadcrumbTrail.autoEnable, value -> workingCopy.breadcrumbTrail.autoEnable = value));
+        predictLeftY += 24;
+        addPageWidget(new IntSlider(left, predictLeftY, columnWidth, "Trail Points", 16, 512, workingCopy.breadcrumbTrail.maxPoints, value -> workingCopy.breadcrumbTrail.maxPoints = value, value -> Integer.toString(value)));
+        predictLeftY += 24;
+        addPageWidget(new DoubleSlider(left, predictLeftY, columnWidth, "Trail Sample Distance", 0.1, 3.0, workingCopy.breadcrumbTrail.sampleDistance, value -> workingCopy.breadcrumbTrail.sampleDistance = value, value -> format(value, 2) + "b"));
+
+        addPageWidget(new DoubleSlider(right, predictRightY, columnWidth, "Trail Line Width", 1.0, 8.0, workingCopy.breadcrumbTrail.lineWidth, value -> workingCopy.breadcrumbTrail.lineWidth = value, value -> format(value, 1)));
+        predictRightY += 24;
+        addPageWidget(toggle(right, predictRightY, "Fade Old Trail", workingCopy.breadcrumbTrail.fade, value -> workingCopy.breadcrumbTrail.fade = value));
+        predictRightY += 24;
+        addPageWidget(toggle(right, predictRightY, "White Trail Core", workingCopy.breadcrumbTrail.whiteCore, value -> workingCopy.breadcrumbTrail.whiteCore = value));
 
         return Math.max(predictLeftY, predictRightY) + 24;
     }

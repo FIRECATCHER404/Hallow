@@ -3,7 +3,7 @@
   "id": "hallow",
   "version": "${version}",
   "name": "Hallow",
-  "description": "Client-side Fabric cheat mod with movement, vision, built-in X-Ray resource-pack toggles, ESP, camera, inventory, protection, and a redesigned searchable F7 control deck.",
+  "description": "Client-side Fabric cheat mod with movement, vision, built-in X-Ray resource-pack toggles, ESP, breadcrumb trails, camera, inventory, protection, and a redesigned searchable F7 control deck.",
   "icon": "assets/hallow/icon.png",
   "authors": [
     "Firecatcher303"

@@ -38,6 +38,7 @@ public final class HallowConfig {
     public NoRenderSettings noRender = new NoRenderSettings();
     public LootCompassSettings lootCompass = new LootCompassSettings();
     public ThreatRadarSettings threatRadar = new ThreatRadarSettings();
+    public BreadcrumbTrailSettings breadcrumbTrail = new BreadcrumbTrailSettings();
     public AutoSprintSettings autoSprint = new AutoSprintSettings();
     public StepAssistSettings stepAssist = new StepAssistSettings();
     public SwimAssistSettings swimAssist = new SwimAssistSettings();
@@ -91,6 +92,13 @@ public final class HallowConfig {
         threatRadar.range = clamp(threatRadar.range, 8.0, 96.0);
         threatRadar.scanInterval = clamp(threatRadar.scanInterval, 2, 40);
         threatRadar.blindsideThreshold = clamp(threatRadar.blindsideThreshold, -0.95, 0.95);
+
+        breadcrumbTrail.maxPoints = clamp(breadcrumbTrail.maxPoints, 16, 512);
+        breadcrumbTrail.sampleDistance = clamp(breadcrumbTrail.sampleDistance, 0.10, 3.0);
+        breadcrumbTrail.lineWidth = clamp(breadcrumbTrail.lineWidth, 1.0, 8.0);
+        breadcrumbTrail.red = clamp(breadcrumbTrail.red, 0.0, 1.0);
+        breadcrumbTrail.green = clamp(breadcrumbTrail.green, 0.0, 1.0);
+        breadcrumbTrail.blue = clamp(breadcrumbTrail.blue, 0.0, 1.0);
 
         stepAssist.height = clamp(stepAssist.height, 0.6, 2.0);
 
@@ -209,6 +217,18 @@ public final class HallowConfig {
         public int scanInterval = 8;
         public double blindsideThreshold = -0.15;
         public boolean highlightPlayers = false;
+    }
+
+    public static final class BreadcrumbTrailSettings {
+        public boolean autoEnable = false;
+        public int maxPoints = 160;
+        public double sampleDistance = 0.55;
+        public double lineWidth = 2.75;
+        public double red = 0.30;
+        public double green = 0.85;
+        public double blue = 1.00;
+        public boolean fade = true;
+        public boolean whiteCore = true;
     }
 
     public static final class AutoSprintSettings {

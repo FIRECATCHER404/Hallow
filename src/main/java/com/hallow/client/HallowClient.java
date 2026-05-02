@@ -13,6 +13,7 @@ import com.hallow.client.cheat.CheatModule;
 import com.hallow.client.cheat.modules.AnchorPulseModule;
 import com.hallow.client.cheat.modules.AutoToolModule;
 import com.hallow.client.cheat.modules.AutoSprintModule;
+import com.hallow.client.cheat.modules.BreadcrumbTrailModule;
 import com.hallow.client.cheat.modules.ChestStealerModule;
 import com.hallow.client.cheat.modules.CreativeAccessModule;
 import com.hallow.client.cheat.modules.FlightModule;
@@ -72,6 +73,7 @@ public final class HallowClient implements ClientModInitializer {
     private ProjectilePredictModule projectilePredictModule;
     private LootCompassModule lootCompassModule;
     private ThreatRadarModule threatRadarModule;
+    private BreadcrumbTrailModule breadcrumbTrailModule;
     private AutoSprintModule autoSprintModule;
     private StepAssistModule stepAssistModule;
     private SwimAssistModule swimAssistModule;
@@ -105,6 +107,7 @@ public final class HallowClient implements ClientModInitializer {
         xRayModule = register(new XRayModule(GLFW.GLFW_KEY_3));
         lootCompassModule = register(new LootCompassModule(GLFW.GLFW_KEY_4));
         threatRadarModule = register(new ThreatRadarModule(GLFW.GLFW_KEY_5));
+        breadcrumbTrailModule = register(new BreadcrumbTrailModule(GLFW.GLFW_KEY_R));
         autoSprintModule = register(new AutoSprintModule(GLFW.GLFW_KEY_6));
         stepAssistModule = register(new StepAssistModule(GLFW.GLFW_KEY_7));
         swimAssistModule = register(new SwimAssistModule(GLFW.GLFW_KEY_8));
@@ -124,6 +127,7 @@ public final class HallowClient implements ClientModInitializer {
         new XRayRenderer(xRayModule).register();
         new ProjectilePredictRenderer(projectilePredictModule).register();
         new PlayerEspRenderer(playerEspModule).register();
+        new BreadcrumbTrailRenderer(breadcrumbTrailModule).register();
 
         ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
@@ -354,7 +358,8 @@ public final class HallowClient implements ClientModInitializer {
         sections.add(new HallowHudRenderer.Section("Awareness", "Nearby tracking, radar, and projectile previews.", 0xFF9A8BE6, List.of(
             moduleEntry(client, lootCompassModule),
             moduleEntry(client, threatRadarModule),
-            moduleEntry(client, projectilePredictModule)
+            moduleEntry(client, projectilePredictModule),
+            moduleEntry(client, breadcrumbTrailModule)
         )));
         sections.add(new HallowHudRenderer.Section("Access", "Inventory tools, map toggles, and anchor utilities.", 0xFFE29F63, List.of(
             moduleEntry(client, creativeAccessModule),
@@ -556,6 +561,7 @@ public final class HallowClient implements ClientModInitializer {
         applyModuleState(client, projectilePredictModule, state, config.projectilePredict.autoEnable);
         applyModuleState(client, lootCompassModule, state, config.lootCompass.autoEnable);
         applyModuleState(client, threatRadarModule, state, config.threatRadar.autoEnable);
+        applyModuleState(client, breadcrumbTrailModule, state, config.breadcrumbTrail.autoEnable);
         applyModuleState(client, autoSprintModule, state, config.autoSprint.autoEnable);
         applyModuleState(client, stepAssistModule, state, config.stepAssist.autoEnable);
         applyModuleState(client, swimAssistModule, state, config.swimAssist.autoEnable);
